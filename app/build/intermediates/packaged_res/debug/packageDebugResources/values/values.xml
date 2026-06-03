@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background_light">#F5F7FA</color>
+    <color name="primary_blue">#1E3A5F</color>
+    <color name="white">#FFFFFF</color>
+    <string name="app_name">Personal Planner</string>
+    <style name="Theme.PersonalPlanner" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#1E3A5F</item>
+        <item name="colorPrimaryVariant">#16324F</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

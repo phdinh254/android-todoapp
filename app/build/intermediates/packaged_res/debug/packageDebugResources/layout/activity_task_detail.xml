@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chi tiết kế hoạch"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1E3A5F"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tiêu đề"
+            android:textSize="15sp"
+            android:textColor="#333333" />
+
+        <EditText
+            android:id="@+id/edtTitle"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:hint="Nhập tiêu đề kế hoạch"
+            android:singleLine="true"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mô tả"
+            android:textSize="15sp"
+            android:textColor="#333333" />
+
+        <EditText
+            android:id="@+id/edtDescription"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:hint="Nhập mô tả kế hoạch"
+            android:gravity="top"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ngày thực hiện"
+            android:textSize="15sp"
+            android:textColor="#333333" />
+
+        <Button
+            android:id="@+id/btnChooseDate"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Chọn ngày"
+            android:textAllCaps="false"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Giờ thực hiện"
+            android:textSize="15sp"
+            android:textColor="#333333" />
+
+        <Button
+            android:id="@+id/btnChooseTime"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Chọn giờ"
+            android:textAllCaps="false"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp" />
+
+        <CheckBox
+            android:id="@+id/chkStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đã hoàn thành"
+            android:textSize="15sp"
+            android:layout_marginBottom="28dp" />
+
+        <Button
+            android:id="@+id/btnUpdateTask"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Cập nhật kế hoạch"
+            android:textAllCaps="false"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnDeleteTask"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Xóa kế hoạch"
+            android:textAllCaps="false"
+            android:layout_marginTop="12dp" />
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Quay lại"
+            android:textAllCaps="false"
+            android:layout_marginTop="12dp" />
+
+    </LinearLayout>
+
+</ScrollView>
