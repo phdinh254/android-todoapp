@@ -29,9 +29,10 @@ public class BootReceiver extends BroadcastReceiver {
                             context,
                             plan.getPlanId(),
                             plan.getTitle(),
-                            plan.getCourseName(),
+                            plan.getCategoryName(),
                             plan.getDate(),
-                            plan.getTime()
+                            plan.getTime(),
+                            plan.getReminderMinutes()
                     );
                 }
             } finally {

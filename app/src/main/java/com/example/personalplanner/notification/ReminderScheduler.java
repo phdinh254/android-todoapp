@@ -17,11 +17,13 @@ public final class ReminderScheduler {
     private ReminderScheduler() {
     }
 
-    public static void schedule(Context context, int planId, String title, String courseName,
-                                String date, String time) {
+    public static void schedule(Context context, int planId, String title, String categoryName,
+                                String date, String time, int reminderMinutes) {
         try {
             Date reminderTime = DATE_TIME_FORMAT.parse(date + " " + time);
-            if (reminderTime == null || reminderTime.getTime() <= System.currentTimeMillis()) {
+            long triggerAt = reminderTime == null ? 0
+                    : reminderTime.getTime() - reminderMinutes * 60_000L;
+            if (reminderTime == null || triggerAt <= System.currentTimeMillis()) {
                 cancel(context, planId);
                 return;
             }
@@ -30,8 +32,8 @@ public final class ReminderScheduler {
             if (alarmManager != null) {
                 alarmManager.setAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
-                        reminderTime.getTime(),
-                        createPendingIntent(context, planId, title, courseName)
+                        triggerAt,
+                        createPendingIntent(context, planId, title, categoryName)
                 );
             }
         } catch (ParseException ignored) {
@@ -45,6 +47,11 @@ public final class ReminderScheduler {
         if (alarmManager != null) {
             alarmManager.cancel(createPendingIntent(context, planId, "", ""));
         }
+    }
+
+    public static void schedule(Context context, int planId, String title, String categoryName,
+                                String date, String time) {
+        schedule(context, planId, title, categoryName, date, time, 0);
     }
 
     private static PendingIntent createPendingIntent(Context context, int planId, String title,

@@ -11,15 +11,15 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Inches, Pt, RGBColor
 
 
-ROOT = Path(r"D:\LTDD\PersonalPlanner_Java_XML_SQLite\PersonalPlanner")
+ROOT = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT / "report_assets"
-OUTPUT = ROOT / "Bao_cao_do_an_Study_Planner.docx"
+OUTPUT = ROOT / "Bao_cao_do_an_Student_Planner.docx"
 ASSET_DIR.mkdir(exist_ok=True)
 
 FONT_REGULAR = Path(r"C:\Windows\Fonts\arial.ttf")
 FONT_BOLD = Path(r"C:\Windows\Fonts\arialbd.ttf")
-TITLE = "XÂY DỰNG ỨNG DỤNG QUẢN LÝ KẾ HOẠCH HỌC TẬP CÁ NHÂN DÀNH CHO SINH VIÊN TRÊN NỀN TẢNG ANDROID"
-SHORT_TITLE = "Ứng dụng quản lý kế hoạch học tập cá nhân dành cho sinh viên"
+TITLE = "XÂY DỰNG ỨNG DỤNG QUẢN LÝ KẾ HOẠCH CÁ NHÂN DÀNH CHO SINH VIÊN TRÊN NỀN TẢNG ANDROID"
+SHORT_TITLE = "Ứng dụng quản lý kế hoạch cá nhân dành cho sinh viên"
 STUDENTS = "Trần Phú Dinh, Sơn Trung Nguyên, Lê Đăng Huy"
 
 

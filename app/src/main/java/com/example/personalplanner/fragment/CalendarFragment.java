@@ -34,7 +34,9 @@ public class CalendarFragment extends Fragment {
     private TextView txtSelectedDate;
     private TextView txtCalendarEmpty;
     private RecyclerView recyclerCalendarTasks;
+    private RecyclerView recyclerUpcomingTasks;
     private TaskAdapter adapter;
+    private TaskAdapter upcomingAdapter;
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
     private ExecutorService executorService;
@@ -51,6 +53,7 @@ public class CalendarFragment extends Fragment {
         txtSelectedDate = view.findViewById(R.id.txtSelectedDate);
         txtCalendarEmpty = view.findViewById(R.id.txtCalendarEmpty);
         recyclerCalendarTasks = view.findViewById(R.id.recyclerCalendarTasks);
+        recyclerUpcomingTasks = view.findViewById(R.id.recyclerUpcomingTasks);
         databaseHelper = new DatabaseHelper(requireContext());
         sessionManager = new SessionManager(requireContext());
         executorService = Executors.newSingleThreadExecutor();
@@ -59,13 +62,27 @@ public class CalendarFragment extends Fragment {
             public void onStatusChanged(StudyPlan plan, boolean checked) {
                 executorService.execute(() -> {
                     databaseHelper.updateStudyPlanStatus(plan.getPlanId(),
-                            sessionManager.getUserId(), checked ? 1 : 0);
+                            sessionManager.getUserId(),
+                            checked ? StudyPlan.STATUS_COMPLETED : StudyPlan.STATUS_UPCOMING);
+                    mainHandler.post(CalendarFragment.this::loadDate);
+                });
+            }
+        });
+        upcomingAdapter = new TaskAdapter(new TaskAdapter.OnTaskActionListener() {
+            public void onTaskClick(StudyPlan plan) { openDetail(plan); }
+            public void onStatusChanged(StudyPlan plan, boolean checked) {
+                executorService.execute(() -> {
+                    databaseHelper.updateStudyPlanStatus(plan.getPlanId(),
+                            sessionManager.getUserId(),
+                            checked ? StudyPlan.STATUS_COMPLETED : StudyPlan.STATUS_UPCOMING);
                     mainHandler.post(CalendarFragment.this::loadDate);
                 });
             }
         });
         recyclerCalendarTasks.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerCalendarTasks.setAdapter(adapter);
+        recyclerUpcomingTasks.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerUpcomingTasks.setAdapter(upcomingAdapter);
         calendarView.setOnDateChangeListener((v, year, month, day) -> {
             selectedDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day);
             loadDate();
@@ -86,9 +103,12 @@ public class CalendarFragment extends Fragment {
         executorService.execute(() -> {
             ArrayList<StudyPlan> plans = databaseHelper.getStudyPlansByDate(
                     sessionManager.getUserId(), selectedDate);
+            ArrayList<StudyPlan> upcoming = databaseHelper.getUpcomingPlans(
+                    sessionManager.getUserId(), selectedDate, 5);
             mainHandler.post(() -> {
                 if (!isAdded() || getView() == null) return;
                 adapter.setData(plans);
+                upcomingAdapter.setData(upcoming);
                 txtCalendarEmpty.setVisibility(plans.isEmpty() ? View.VISIBLE : View.GONE);
                 recyclerCalendarTasks.setVisibility(plans.isEmpty() ? View.GONE : View.VISIBLE);
             });
@@ -103,7 +123,17 @@ public class CalendarFragment extends Fragment {
         intent.putExtra("date", plan.getDate());
         intent.putExtra("time", plan.getTime());
         intent.putExtra("status", plan.getStatus());
-        intent.putExtra("course_id", plan.getCourseId());
+        intent.putExtra("category_id", plan.getCategoryId());
+        intent.putExtra("plan_type", plan.getPlanType());
+        intent.putExtra("end_time", plan.getEndTime());
+        intent.putExtra("location", plan.getLocation());
+        intent.putExtra("room", plan.getRoom());
+        intent.putExtra("subject", plan.getSubject());
+        intent.putExtra("repeat_rule", plan.getRepeatRule());
+        intent.putExtra("repeat_until", plan.getRepeatUntil());
+        intent.putExtra("reminder_minutes", plan.getReminderMinutes());
+        intent.putExtra("wage", plan.getWage());
+        intent.putExtra("submitted", plan.isSubmitted());
         intent.putExtra("priority", plan.getPriority());
         intent.putExtra("duration", plan.getDurationMinutes());
         intent.putExtra("reminder_enabled", plan.isReminderEnabled());

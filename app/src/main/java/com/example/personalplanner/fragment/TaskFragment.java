@@ -26,7 +26,7 @@ import com.example.personalplanner.R;
 import com.example.personalplanner.activity.TaskDetailActivity;
 import com.example.personalplanner.adapter.TaskAdapter;
 import com.example.personalplanner.data.local.DatabaseHelper;
-import com.example.personalplanner.data.model.Course;
+import com.example.personalplanner.data.model.PlanCategory;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.notification.ReminderScheduler;
 import com.example.personalplanner.utils.SessionManager;
@@ -46,7 +46,7 @@ public class TaskFragment extends Fragment {
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
     private ExecutorService executorService;
-    private final ArrayList<Course> courses = new ArrayList<>();
+    private final ArrayList<PlanCategory> categories = new ArrayList<>();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Runnable searchRunnable = this::loadPlans;
     private int statusFilter = DatabaseHelper.FILTER_ALL;
@@ -89,13 +89,13 @@ public class TaskFragment extends Fragment {
         });
         chipGroupFilter.setOnCheckedStateChangeListener((group, checkedIds) -> {
             int id = checkedIds.isEmpty() ? R.id.chipAll : checkedIds.get(0);
-            statusFilter = id == R.id.chipPending ? DatabaseHelper.STATUS_PENDING
+            statusFilter = id == R.id.chipPending ? DatabaseHelper.STATUS_UPCOMING
                     : id == R.id.chipCompleted ? DatabaseHelper.STATUS_COMPLETED
                     : DatabaseHelper.FILTER_ALL;
             loadPlans();
         });
         spinnerCourseFilter.setOnItemSelectedListener(new SimpleItemSelectedListener(this::loadPlans));
-        loadCourses();
+        loadCategories();
         return view;
     }
 
@@ -103,27 +103,27 @@ public class TaskFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (executorService != null && !executorService.isShutdown()) {
-            loadCourses();
+            loadCategories();
             loadPlans();
         }
     }
 
-    private void loadCourses() {
+    private void loadCategories() {
         executorService.execute(() -> {
-            ArrayList<Course> result = databaseHelper.getCourses(sessionManager.getUserId());
-            result.add(0, new Course(0, getString(R.string.all_courses),
+            ArrayList<PlanCategory> result = databaseHelper.getCategories(sessionManager.getUserId());
+            result.add(0, new PlanCategory(0, getString(R.string.all_courses),
                     "", "", "#607D8B", sessionManager.getUserId()));
             mainHandler.post(() -> {
                 if (!isAdded() || getView() == null) return;
-                int selectedId = getCourseFilter();
-                courses.clear();
-                courses.addAll(result);
-                ArrayAdapter<Course> adapter = new ArrayAdapter<>(
-                        requireContext(), android.R.layout.simple_spinner_item, courses);
+                int selectedId = getCategoryFilter();
+                categories.clear();
+                categories.addAll(result);
+                ArrayAdapter<PlanCategory> adapter = new ArrayAdapter<>(
+                        requireContext(), android.R.layout.simple_spinner_item, categories);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spinnerCourseFilter.setAdapter(adapter);
-                for (int i = 0; i < courses.size(); i++) {
-                    if (courses.get(i).getCourseId() == selectedId) {
+                for (int i = 0; i < categories.size(); i++) {
+                    if (categories.get(i).getCategoryId() == selectedId) {
                         spinnerCourseFilter.setSelection(i);
                         break;
                     }
@@ -135,11 +135,11 @@ public class TaskFragment extends Fragment {
     private void loadPlans() {
         if (executorService == null || executorService.isShutdown() || edtSearchTask == null) return;
         String keyword = edtSearchTask.getText().toString().trim();
-        int courseId = getCourseFilter();
+        int categoryId = getCategoryFilter();
         showLoading(true);
         executorService.execute(() -> {
             ArrayList<StudyPlan> plans = databaseHelper.getStudyPlans(
-                    sessionManager.getUserId(), keyword, statusFilter, courseId);
+                    sessionManager.getUserId(), keyword, statusFilter, categoryId);
             mainHandler.post(() -> {
                 if (!isAdded() || getView() == null) return;
                 taskAdapter.setData(plans);
@@ -153,14 +153,14 @@ public class TaskFragment extends Fragment {
         });
     }
 
-    private int getCourseFilter() {
+    private int getCategoryFilter() {
         int position = spinnerCourseFilter == null ? 0 : spinnerCourseFilter.getSelectedItemPosition();
-        return position >= 0 && position < courses.size() ? courses.get(position).getCourseId() : 0;
+        return position >= 0 && position < categories.size() ? categories.get(position).getCategoryId() : 0;
     }
 
     private void updatePlanStatus(StudyPlan plan, boolean checked) {
         int oldStatus = plan.getStatus();
-        int newStatus = checked ? 1 : 0;
+        int newStatus = checked ? StudyPlan.STATUS_COMPLETED : StudyPlan.STATUS_UPCOMING;
         plan.setStatus(newStatus);
         executorService.execute(() -> {
             boolean updated = databaseHelper.updateStudyPlanStatus(
@@ -188,7 +188,17 @@ public class TaskFragment extends Fragment {
         intent.putExtra("date", plan.getDate());
         intent.putExtra("time", plan.getTime());
         intent.putExtra("status", plan.getStatus());
-        intent.putExtra("course_id", plan.getCourseId());
+        intent.putExtra("category_id", plan.getCategoryId());
+        intent.putExtra("plan_type", plan.getPlanType());
+        intent.putExtra("end_time", plan.getEndTime());
+        intent.putExtra("location", plan.getLocation());
+        intent.putExtra("room", plan.getRoom());
+        intent.putExtra("subject", plan.getSubject());
+        intent.putExtra("repeat_rule", plan.getRepeatRule());
+        intent.putExtra("repeat_until", plan.getRepeatUntil());
+        intent.putExtra("reminder_minutes", plan.getReminderMinutes());
+        intent.putExtra("wage", plan.getWage());
+        intent.putExtra("submitted", plan.isSubmitted());
         intent.putExtra("priority", plan.getPriority());
         intent.putExtra("duration", plan.getDurationMinutes());
         intent.putExtra("reminder_enabled", plan.isReminderEnabled());

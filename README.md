@@ -1,73 +1,85 @@
-# Study Planner - Android Java XML SQLite
+# Student Planner - Android Java XML SQLite
 
-Ứng dụng quản lý kế hoạch học tập cá nhân dành cho sinh viên trên Android.
+Ung dung quan ly ke hoach ca nhan danh cho sinh vien tren Android.
+De tai khong chi tap trung vao viec hoc, ma mo rong cho cac nhu cau hang ngay
+cua sinh vien nhu lam bai tap, di hoc, lam them, on thi, do an, lich hen va
+cac viec ca nhan can theo doi.
 
-## Công nghệ
+## Cong nghe
 
 - Java 17
-- XML Layout và Material Components
+- XML Layout va Material Components
 - SQLiteOpenHelper
 - SharedPreferences
 - RecyclerView
 - BottomNavigationView
-- AlarmManager và Notification
-- ExecutorService cho truy vấn dữ liệu nền
+- AlarmManager va Notification
+- ExecutorService cho truy van du lieu nen
 
-## Cấu trúc source
+## Cau truc source
 
 ```text
 com.example.personalplanner
-├── activity/       Activity đăng nhập, kế hoạch và môn học
+├── activity/       Activity dang nhap, ke hoach va nhom ke hoach
 ├── adapter/        RecyclerView adapter
 ├── data/
 │   ├── local/      SQLite DatabaseHelper
 │   └── model/      User, Course, StudyPlan, StudyStatistics
-├── fragment/       Tổng quan, kế hoạch, lịch và hồ sơ
-├── notification/   Lập lịch và hiển thị nhắc học
-└── utils/          Session và mã hóa mật khẩu
+├── fragment/       Tong quan, ke hoach, lich va ho so
+├── notification/   Lap lich va hien thi nhac viec
+└── utils/          Session va ma hoa mat khau
 ```
 
-## Thực thể dữ liệu
+## Thuc the du lieu
 
-- `users`: tài khoản người dùng.
-- `courses`: môn học, mã môn, giảng viên và màu nhận diện.
-- `tasks`: kế hoạch học tập, môn học, ngày giờ, mức ưu tiên, thời lượng, tiến độ và nhắc lịch.
+- `users`: tai khoan nguoi dung.
+- `plan_categories`: nhom ke hoach nhu Hoc tap, Bai tap, Di hoc, Lam them,
+  Ca nhan. Bang `courses` cu duoc migration sang bang nay.
+- `tasks`: ke hoach sinh vien, gom noi dung, loai ke hoach, nhom, ngay gio,
+  gio ket thuc, dia diem, phong/ca, mon/lop lien quan, muc uu tien, thoi
+  luong, trang thai, lap lai, nhac truoc va cac truong rieng nhu tien cong
+  hoac trang thai da nop bai.
 
-Quan hệ:
+Quan he:
 
-- Một người dùng có nhiều môn học.
-- Một người dùng có nhiều kế hoạch học tập.
-- Một môn học có nhiều kế hoạch học tập.
+- Mot nguoi dung co nhieu nhom ke hoach.
+- Mot nguoi dung co nhieu ke hoach.
+- Mot nhom ke hoach co nhieu ke hoach.
 
-## Chức năng
+## Chuc nang
 
-- Đăng ký, đăng nhập và lưu phiên.
-- CRUD môn học.
-- CRUD kế hoạch học tập.
-- Phân loại kế hoạch theo môn học.
-- Tìm kiếm và lọc theo trạng thái, môn học.
-- Chọn mức ưu tiên và thời lượng dự kiến.
-- Đánh dấu hoàn thành.
-- Xem kế hoạch theo lịch.
-- Nhắc lịch học bằng notification.
-- Thống kê số môn, số kế hoạch, tiến độ và tổng giờ dự kiến.
-- Dark mode theo hệ thống.
+- Dang ky, dang nhap va luu phien.
+- CRUD nhom ke hoach.
+- CRUD ke hoach sinh vien.
+- Phan loai ke hoach theo nhom: bai tap, di hoc, lam them, hoc tap, ca nhan...
+- Gan loai ke hoach: Bai tap, Di hoc, Lam them, Ca nhan, Thi/Kiem tra, Do an.
+- Luu thong tin dac thu: dia diem, phong/ca, mon/lop, tien cong, da nop bai.
+- Ho tro lap lai hang ngay hoac hang tuan den mot ngay ket thuc.
+- Tim kiem va loc theo trang thai, nhom ke hoach.
+- Chon muc uu tien va thoi luong du kien.
+- Trang thai mo rong: Sap toi, Dang thuc hien, Hoan thanh, Da huy.
+- Xem ke hoach theo lich ngay.
+- Canh bao trung gio khi them/sua ke hoach cung ngay.
+- Nhac lich bang notification, ho tro nhac dung gio hoac truoc 5/15/30 phut.
+- Thong ke so nhom, so ke hoach, tien do, tong gio du kien, bai tap, buoi hoc,
+  ca lam them va ke hoach qua han.
+- Dark mode theo he thong.
 
-## Chạy project
+## Chay project
 
-1. Mở thư mục project bằng Android Studio.
-2. Chọn JDK 17 cho Gradle.
+1. Mo thu muc project bang Android Studio.
+2. Chon JDK 17 cho Gradle.
 3. Sync Gradle.
-4. Chạy trên thiết bị hoặc emulator API 23 trở lên.
-5. Trên Android 13 trở lên, cho phép quyền thông báo để dùng nhắc lịch.
+4. Chay tren thiet bi hoac emulator API 23 tro len.
+5. Tren Android 13 tro len, cho phep quyen thong bao de dung nhac lich.
 
-Build bằng terminal:
+Build bang terminal:
 
 ```powershell
 .\gradlew.bat clean assembleDebug
 ```
 
-APK debug được tạo tại:
+APK debug duoc tao tai:
 
 ```text
 app/build/outputs/apk/debug/app-debug.apk

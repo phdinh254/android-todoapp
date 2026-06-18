@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.personalplanner.R;
 import com.example.personalplanner.adapter.CourseAdapter;
 import com.example.personalplanner.data.local.DatabaseHelper;
-import com.example.personalplanner.data.model.Course;
+import com.example.personalplanner.data.model.PlanCategory;
 import com.example.personalplanner.utils.SessionManager;
 import com.google.android.material.button.MaterialButton;
 
@@ -51,21 +51,21 @@ public class CourseListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         executorService.execute(() -> {
-            ArrayList<Course> courses = databaseHelper.getCourses(sessionManager.getUserId());
+            ArrayList<PlanCategory> categories = databaseHelper.getCategories(sessionManager.getUserId());
             runOnUiThread(() -> {
-                adapter.setData(courses);
-                txtEmptyCourses.setVisibility(courses.isEmpty() ? View.VISIBLE : View.GONE);
+                adapter.setData(categories);
+                txtEmptyCourses.setVisibility(categories.isEmpty() ? View.VISIBLE : View.GONE);
             });
         });
     }
 
-    private void openCourse(Course course) {
+    private void openCourse(PlanCategory category) {
         Intent intent = new Intent(this, CourseFormActivity.class);
-        intent.putExtra("course_id", course.getCourseId());
-        intent.putExtra("course_name", course.getCourseName());
-        intent.putExtra("course_code", course.getCourseCode());
-        intent.putExtra("lecturer", course.getLecturer());
-        intent.putExtra("color", course.getColor());
+        intent.putExtra("category_id", category.getCategoryId());
+        intent.putExtra("category_name", category.getCategoryName());
+        intent.putExtra("category_code", category.getCategoryCode());
+        intent.putExtra("note", category.getNote());
+        intent.putExtra("color", category.getColor());
         startActivity(intent);
     }
 

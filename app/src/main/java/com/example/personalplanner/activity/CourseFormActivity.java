@@ -31,7 +31,7 @@ public class CourseFormActivity extends AppCompatActivity {
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private int courseId = -1;
+    private int categoryId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,14 +63,14 @@ public class CourseFormActivity extends AppCompatActivity {
     }
 
     private void readCourse() {
-        courseId = getIntent().getIntExtra("course_id", -1);
-        if (courseId == -1) {
+        categoryId = getIntent().getIntExtra("category_id", -1);
+        if (categoryId == -1) {
             btnDeleteCourse.setVisibility(View.GONE);
             return;
         }
-        edtCourseName.setText(getIntent().getStringExtra("course_name"));
-        edtCourseCode.setText(getIntent().getStringExtra("course_code"));
-        edtLecturer.setText(getIntent().getStringExtra("lecturer"));
+        edtCourseName.setText(getIntent().getStringExtra("category_name"));
+        edtCourseCode.setText(getIntent().getStringExtra("category_code"));
+        edtLecturer.setText(getIntent().getStringExtra("note"));
         String color = getIntent().getStringExtra("color");
         for (int index = 0; index < COLORS.length; index++) {
             if (COLORS[index].equals(color)) {
@@ -93,9 +93,9 @@ public class CourseFormActivity extends AppCompatActivity {
         String lecturer = edtLecturer.getText().toString().trim();
         String color = COLORS[spinnerCourseColor.getSelectedItemPosition()];
         executorService.execute(() -> {
-            boolean success = courseId == -1
-                    ? databaseHelper.addCourse(name, code, lecturer, color, userId) != -1
-                    : databaseHelper.updateCourse(courseId, name, code, lecturer, color, userId);
+            boolean success = categoryId == -1
+                    ? databaseHelper.addCategory(name, code, lecturer, color, userId) != -1
+                    : databaseHelper.updateCategory(categoryId, name, code, lecturer, color, userId);
             runOnUiThread(() -> {
                 if (success) {
                     Toast.makeText(this, R.string.course_saved, Toast.LENGTH_SHORT).show();
@@ -119,7 +119,7 @@ public class CourseFormActivity extends AppCompatActivity {
 
     private void deleteCourse() {
         executorService.execute(() -> {
-            boolean deleted = databaseHelper.deleteCourse(courseId, sessionManager.getUserId());
+            boolean deleted = databaseHelper.deleteCategory(categoryId, sessionManager.getUserId());
             runOnUiThread(() -> {
                 Toast.makeText(this,
                         deleted ? R.string.course_deleted : R.string.course_delete_failed,

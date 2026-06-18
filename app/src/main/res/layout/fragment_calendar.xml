@@ -61,4 +61,21 @@
         android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingBottom="20dp" />
+
+    <TextView
+        android:id="@+id/txtUpcomingTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/upcoming_plans"
+        android:textAppearance="@style/TextAppearance.PersonalPlanner.Title" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerUpcomingTasks"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="6dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="20dp" />
 </LinearLayout>

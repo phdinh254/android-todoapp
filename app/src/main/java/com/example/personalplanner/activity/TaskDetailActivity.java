@@ -15,7 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.personalplanner.R;
 import com.example.personalplanner.data.local.DatabaseHelper;
-import com.example.personalplanner.data.model.Course;
+import com.example.personalplanner.data.model.PlanCategory;
+import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.notification.ReminderScheduler;
 import com.example.personalplanner.utils.SessionManager;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -32,25 +33,40 @@ public class TaskDetailActivity extends AppCompatActivity {
     private EditText edtTitle;
     private EditText edtDescription;
     private EditText edtDuration;
+    private EditText edtLocation;
+    private EditText edtRoom;
+    private EditText edtSubject;
+    private EditText edtRepeatUntil;
+    private EditText edtWage;
     private Button btnChooseDate;
     private Button btnChooseTime;
+    private Button btnChooseEndTime;
     private Button btnUpdateTask;
     private Button btnDeleteTask;
-    private CheckBox chkStatus;
-    private Spinner spinnerCourse;
+    private CheckBox chkSubmitted;
+    private Spinner spinnerCategory;
+    private Spinner spinnerPlanType;
+    private Spinner spinnerStatus;
     private Spinner spinnerPriority;
+    private Spinner spinnerRepeatRule;
+    private Spinner spinnerReminderLead;
     private SwitchMaterial switchReminder;
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
-    private final ArrayList<Course> courses = new ArrayList<>();
+    private final ArrayList<PlanCategory> categories = new ArrayList<>();
     private final Calendar calendar = Calendar.getInstance();
+    private final Calendar endCalendar = Calendar.getInstance();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.US);
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private int planId;
-    private int selectedCourseId;
+    private int selectedCategoryId;
     private String selectedDate;
     private String selectedTime;
+    private String selectedEndTime;
+    private String selectedType;
+    private String selectedRepeatRule;
+    private int selectedReminderMinutes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,33 +76,52 @@ public class TaskDetailActivity extends AppCompatActivity {
         edtTitle = findViewById(R.id.edtTitle);
         edtDescription = findViewById(R.id.edtDescription);
         edtDuration = findViewById(R.id.edtDuration);
+        edtLocation = findViewById(R.id.edtLocation);
+        edtRoom = findViewById(R.id.edtRoom);
+        edtSubject = findViewById(R.id.edtSubject);
+        edtRepeatUntil = findViewById(R.id.edtRepeatUntil);
+        edtWage = findViewById(R.id.edtWage);
         btnChooseDate = findViewById(R.id.btnChooseDate);
         btnChooseTime = findViewById(R.id.btnChooseTime);
+        btnChooseEndTime = findViewById(R.id.btnChooseEndTime);
         btnUpdateTask = findViewById(R.id.btnUpdateTask);
         btnDeleteTask = findViewById(R.id.btnDeleteTask);
-        chkStatus = findViewById(R.id.chkStatus);
-        spinnerCourse = findViewById(R.id.spinnerCourse);
+        chkSubmitted = findViewById(R.id.chkSubmitted);
+        spinnerCategory = findViewById(R.id.spinnerCourse);
+        spinnerPlanType = findViewById(R.id.spinnerPlanType);
+        spinnerStatus = findViewById(R.id.spinnerStatus);
         spinnerPriority = findViewById(R.id.spinnerPriority);
+        spinnerRepeatRule = findViewById(R.id.spinnerRepeatRule);
+        spinnerReminderLead = findViewById(R.id.spinnerReminderLead);
         switchReminder = findViewById(R.id.switchReminder);
         Button btnBack = findViewById(R.id.btnBack);
         databaseHelper = new DatabaseHelper(this);
         sessionManager = new SessionManager(this);
 
-        ArrayAdapter<CharSequence> priorityAdapter = ArrayAdapter.createFromResource(
-                this, R.array.priority_names, android.R.layout.simple_spinner_item);
-        priorityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerPriority.setAdapter(priorityAdapter);
+        bindSpinner(spinnerPriority, R.array.priority_names);
+        bindSpinner(spinnerPlanType, R.array.plan_type_names);
+        bindSpinner(spinnerStatus, R.array.status_names);
+        bindSpinner(spinnerRepeatRule, R.array.repeat_rule_names);
+        bindSpinner(spinnerReminderLead, R.array.reminder_lead_names);
 
         if (!readPlan()) {
             finish();
             return;
         }
-        loadCourses();
+        loadCategories();
         btnChooseDate.setOnClickListener(v -> showDatePicker());
-        btnChooseTime.setOnClickListener(v -> showTimePicker());
+        btnChooseTime.setOnClickListener(v -> showTimePicker(calendar, true));
+        btnChooseEndTime.setOnClickListener(v -> showTimePicker(endCalendar, false));
         btnUpdateTask.setOnClickListener(v -> updatePlan());
         btnDeleteTask.setOnClickListener(v -> confirmDelete());
         btnBack.setOnClickListener(v -> finish());
+    }
+
+    private void bindSpinner(Spinner spinner, int arrayRes) {
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this, arrayRes, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
     }
 
     private boolean readPlan() {
@@ -98,34 +133,48 @@ public class TaskDetailActivity extends AppCompatActivity {
         edtTitle.setText(value(getIntent().getStringExtra("title")));
         edtDescription.setText(value(getIntent().getStringExtra("description")));
         edtDuration.setText(String.valueOf(getIntent().getIntExtra("duration", 60)));
+        edtLocation.setText(value(getIntent().getStringExtra("location")));
+        edtRoom.setText(value(getIntent().getStringExtra("room")));
+        edtSubject.setText(value(getIntent().getStringExtra("subject")));
+        edtRepeatUntil.setText(value(getIntent().getStringExtra("repeat_until")));
+        edtWage.setText(String.valueOf(getIntent().getDoubleExtra("wage", 0)));
         selectedDate = valueOrDefault(getIntent().getStringExtra("date"),
                 dateFormat.format(calendar.getTime()));
         selectedTime = valueOrDefault(getIntent().getStringExtra("time"),
                 timeFormat.format(calendar.getTime()));
-        selectedCourseId = getIntent().getIntExtra("course_id", 0);
+        selectedEndTime = valueOrDefault(getIntent().getStringExtra("end_time"), selectedTime);
+        selectedCategoryId = getIntent().getIntExtra("category_id", 0);
+        selectedType = valueOrDefault(getIntent().getStringExtra("plan_type"), StudyPlan.TYPE_PERSONAL);
+        selectedRepeatRule = valueOrDefault(getIntent().getStringExtra("repeat_rule"), "NONE");
+        selectedReminderMinutes = getIntent().getIntExtra("reminder_minutes", 0);
         spinnerPriority.setSelection(getIntent().getIntExtra("priority", 1));
+        spinnerStatus.setSelection(getIntent().getIntExtra("status", 0));
+        setSelectionByValue(spinnerPlanType, R.array.plan_type_values, selectedType);
+        setSelectionByValue(spinnerRepeatRule, R.array.repeat_rule_values, selectedRepeatRule);
+        setSelectionByValue(spinnerReminderLead, R.array.reminder_lead_values,
+                String.valueOf(selectedReminderMinutes));
         switchReminder.setChecked(getIntent().getBooleanExtra("reminder_enabled", false));
-        chkStatus.setChecked(getIntent().getIntExtra("status", 0) == 1);
+        chkSubmitted.setChecked(getIntent().getBooleanExtra("submitted", false));
         syncCalendar();
         updateDateTimeLabels();
         return true;
     }
 
-    private void loadCourses() {
+    private void loadCategories() {
         executorService.execute(() -> {
-            ArrayList<Course> result = databaseHelper.getCourses(sessionManager.getUserId());
-            result.add(0, new Course(0, getString(R.string.uncategorized_course),
+            ArrayList<PlanCategory> result = databaseHelper.getCategories(sessionManager.getUserId());
+            result.add(0, new PlanCategory(0, getString(R.string.uncategorized_course),
                     "", "", "#607D8B", sessionManager.getUserId()));
             runOnUiThread(() -> {
-                courses.clear();
-                courses.addAll(result);
-                ArrayAdapter<Course> adapter = new ArrayAdapter<>(
-                        this, android.R.layout.simple_spinner_item, courses);
+                categories.clear();
+                categories.addAll(result);
+                ArrayAdapter<PlanCategory> adapter = new ArrayAdapter<>(
+                        this, android.R.layout.simple_spinner_item, categories);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                spinnerCourse.setAdapter(adapter);
-                for (int index = 0; index < courses.size(); index++) {
-                    if (courses.get(index).getCourseId() == selectedCourseId) {
-                        spinnerCourse.setSelection(index);
+                spinnerCategory.setAdapter(adapter);
+                for (int index = 0; index < categories.size(); index++) {
+                    if (categories.get(index).getCategoryId() == selectedCategoryId) {
+                        spinnerCategory.setSelection(index);
                         break;
                     }
                 }
@@ -136,31 +185,43 @@ public class TaskDetailActivity extends AppCompatActivity {
     private void syncCalendar() {
         try {
             calendar.setTime(dateFormat.parse(selectedDate));
-            String[] parts = selectedTime.split(":");
-            calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(parts[0]));
-            calendar.set(Calendar.MINUTE, Integer.parseInt(parts[1]));
+            endCalendar.setTime(dateFormat.parse(selectedDate));
+            applyTime(calendar, selectedTime);
+            applyTime(endCalendar, selectedEndTime);
         } catch (ParseException | NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
             selectedDate = dateFormat.format(calendar.getTime());
             selectedTime = timeFormat.format(calendar.getTime());
+            selectedEndTime = selectedTime;
         }
+    }
+
+    private void applyTime(Calendar target, String time) {
+        String[] parts = time.split(":");
+        target.set(Calendar.HOUR_OF_DAY, Integer.parseInt(parts[0]));
+        target.set(Calendar.MINUTE, Integer.parseInt(parts[1]));
     }
 
     private void showDatePicker() {
         new DatePickerDialog(this, (view, year, month, day) -> {
             calendar.set(year, month, day);
+            endCalendar.set(year, month, day);
             selectedDate = dateFormat.format(calendar.getTime());
             updateDateTimeLabels();
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)).show();
     }
 
-    private void showTimePicker() {
+    private void showTimePicker(Calendar target, boolean startTime) {
         new TimePickerDialog(this, (view, hour, minute) -> {
-            calendar.set(Calendar.HOUR_OF_DAY, hour);
-            calendar.set(Calendar.MINUTE, minute);
-            selectedTime = timeFormat.format(calendar.getTime());
+            target.set(Calendar.HOUR_OF_DAY, hour);
+            target.set(Calendar.MINUTE, minute);
+            if (startTime) {
+                selectedTime = timeFormat.format(target.getTime());
+            } else {
+                selectedEndTime = timeFormat.format(target.getTime());
+            }
             updateDateTimeLabels();
-        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show();
+        }, target.get(Calendar.HOUR_OF_DAY), target.get(Calendar.MINUTE), true).show();
     }
 
     private void updatePlan() {
@@ -169,27 +230,39 @@ public class TaskDetailActivity extends AppCompatActivity {
             edtTitle.setError(getString(R.string.error_task_title_required));
             return;
         }
-        int duration = parseDuration();
-        if (duration <= 0 || courses.isEmpty()) {
+        int duration = parseInt(edtDuration, -1);
+        if (duration <= 0 || categories.isEmpty()) {
             edtDuration.setError(getString(R.string.error_duration));
             return;
         }
-        Course course = courses.get(spinnerCourse.getSelectedItemPosition());
-        String description = edtDescription.getText().toString().trim();
-        int priority = spinnerPriority.getSelectedItemPosition();
-        boolean reminder = switchReminder.isChecked();
-        int status = chkStatus.isChecked() ? 1 : 0;
+        PlanCategory category = categories.get(spinnerCategory.getSelectedItemPosition());
+        int status = spinnerStatus.getSelectedItemPosition();
+        int reminderMinutes = Integer.parseInt(valueFromArray(
+                R.array.reminder_lead_values, spinnerReminderLead.getSelectedItemPosition()));
+        String planType = valueFromArray(R.array.plan_type_values, spinnerPlanType.getSelectedItemPosition());
+        String repeatRule = valueFromArray(R.array.repeat_rule_values, spinnerRepeatRule.getSelectedItemPosition());
+        if (databaseHelper.hasTimeConflict(sessionManager.getUserId(), selectedDate,
+                selectedTime, selectedEndTime, planId)) {
+            Toast.makeText(this, R.string.schedule_conflict_warning, Toast.LENGTH_SHORT).show();
+        }
         setWorking(true);
         executorService.execute(() -> {
             boolean updated = databaseHelper.updateStudyPlan(
-                    planId, sessionManager.getUserId(), title, description,
-                    selectedDate, selectedTime, status, course.getCourseId(),
-                    priority, duration, reminder);
+                    planId, sessionManager.getUserId(), title,
+                    edtDescription.getText().toString().trim(), selectedDate, selectedTime,
+                    selectedEndTime, status, category.getCategoryId(), planType,
+                    spinnerPriority.getSelectedItemPosition(), duration, switchReminder.isChecked(),
+                    reminderMinutes, edtLocation.getText().toString(),
+                    edtRoom.getText().toString(), edtSubject.getText().toString(),
+                    repeatRule, edtRepeatUntil.getText().toString().trim(),
+                    parseDouble(edtWage), chkSubmitted.isChecked());
             runOnUiThread(() -> {
                 if (updated) {
-                    if (reminder && status == DatabaseHelper.STATUS_PENDING) {
-                        ReminderScheduler.schedule(this, planId, title, course.getCourseName(),
-                                selectedDate, selectedTime);
+                    if (switchReminder.isChecked()
+                            && status != DatabaseHelper.STATUS_COMPLETED
+                            && status != DatabaseHelper.STATUS_CANCELLED) {
+                        ReminderScheduler.schedule(this, planId, title, category.getCategoryName(),
+                                selectedDate, selectedTime, reminderMinutes);
                     } else {
                         ReminderScheduler.cancel(this, planId);
                     }
@@ -227,17 +300,42 @@ public class TaskDetailActivity extends AppCompatActivity {
         });
     }
 
-    private int parseDuration() {
+    private int parseInt(EditText editText, int fallback) {
         try {
-            return Integer.parseInt(edtDuration.getText().toString().trim());
+            return Integer.parseInt(editText.getText().toString().trim());
         } catch (NumberFormatException ignored) {
-            return -1;
+            return fallback;
         }
+    }
+
+    private double parseDouble(EditText editText) {
+        try {
+            String value = editText.getText().toString().trim();
+            return value.isEmpty() ? 0 : Double.parseDouble(value);
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
+    }
+
+    private void setSelectionByValue(Spinner spinner, int arrayRes, String value) {
+        String[] values = getResources().getStringArray(arrayRes);
+        for (int i = 0; i < values.length; i++) {
+            if (values[i].equals(value)) {
+                spinner.setSelection(i);
+                return;
+            }
+        }
+    }
+
+    private String valueFromArray(int arrayRes, int position) {
+        String[] values = getResources().getStringArray(arrayRes);
+        return position >= 0 && position < values.length ? values[position] : values[0];
     }
 
     private void updateDateTimeLabels() {
         btnChooseDate.setText(getString(R.string.date_value, selectedDate));
         btnChooseTime.setText(getString(R.string.time_value, selectedTime));
+        btnChooseEndTime.setText(getString(R.string.end_time_value, selectedEndTime));
     }
 
     private void setWorking(boolean working) {

@@ -62,19 +62,28 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
                 ? View.GONE : View.VISIBLE);
         holder.txtTaskDateTime.setText(holder.itemView.getContext().getString(
                 R.string.task_date_time, plan.getDate(), plan.getTime()));
-        holder.txtCourseName.setText(plan.getCourseName().trim().isEmpty()
+        holder.txtCourseName.setText(plan.getCategoryName().trim().isEmpty()
                 ? holder.itemView.getContext().getString(R.string.uncategorized_course)
-                : plan.getCourseName());
+                : plan.getCategoryName());
+        String[] typeValues = holder.itemView.getResources().getStringArray(R.array.plan_type_values);
+        String[] typeNames = holder.itemView.getResources().getStringArray(R.array.plan_type_names);
+        String typeName = plan.getPlanType();
+        for (int i = 0; i < typeValues.length; i++) {
+            if (typeValues[i].equals(plan.getPlanType())) {
+                typeName = typeNames[i];
+                break;
+            }
+        }
         holder.txtStudyMeta.setText(holder.itemView.getContext().getString(
                 R.string.study_meta,
-                holder.itemView.getResources().getStringArray(R.array.priority_names)[plan.getPriority()],
+                typeName + " / " + holder.itemView.getResources().getStringArray(R.array.priority_names)[plan.getPriority()],
                 plan.getDurationMinutes()
         ));
 
         holder.chkStatus.setOnCheckedChangeListener(null);
-        holder.chkStatus.setChecked(plan.getStatus() == 1);
+        holder.chkStatus.setChecked(plan.getStatus() == StudyPlan.STATUS_COMPLETED);
         int flags = holder.txtTaskTitle.getPaintFlags();
-        holder.txtTaskTitle.setPaintFlags(plan.getStatus() == 1
+        holder.txtTaskTitle.setPaintFlags(plan.getStatus() == StudyPlan.STATUS_COMPLETED
                 ? flags | Paint.STRIKE_THRU_TEXT_FLAG
                 : flags & ~Paint.STRIKE_THRU_TEXT_FLAG);
         holder.itemView.setOnClickListener(v -> listener.onTaskClick(plan));

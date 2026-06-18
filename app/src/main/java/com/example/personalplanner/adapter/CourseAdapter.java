@@ -10,32 +10,32 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.personalplanner.R;
-import com.example.personalplanner.data.model.Course;
+import com.example.personalplanner.data.model.PlanCategory;
 
 import java.util.ArrayList;
 
 public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseViewHolder> {
     public interface OnCourseClickListener {
-        void onCourseClick(Course course);
+        void onCourseClick(PlanCategory category);
     }
 
-    private final ArrayList<Course> courses = new ArrayList<>();
+    private final ArrayList<PlanCategory> categories = new ArrayList<>();
     private final OnCourseClickListener listener;
 
     public CourseAdapter(OnCourseClickListener listener) {
         this.listener = listener;
     }
 
-    public void setData(ArrayList<Course> newCourses) {
-        int oldSize = courses.size();
-        courses.clear();
+    public void setData(ArrayList<PlanCategory> newCategories) {
+        int oldSize = categories.size();
+        categories.clear();
         if (oldSize > 0) {
             notifyItemRangeRemoved(0, oldSize);
         }
-        if (newCourses != null) {
-            courses.addAll(newCourses);
-            if (!newCourses.isEmpty()) {
-                notifyItemRangeInserted(0, newCourses.size());
+        if (newCategories != null) {
+            categories.addAll(newCategories);
+            if (!newCategories.isEmpty()) {
+                notifyItemRangeInserted(0, newCategories.size());
             }
         }
     }
@@ -50,27 +50,27 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
 
     @Override
     public void onBindViewHolder(@NonNull CourseViewHolder holder, int position) {
-        Course course = courses.get(position);
-        holder.txtCourseName.setText(course.getCourseName());
-        holder.txtCourseCode.setText(course.getCourseCode().trim().isEmpty()
+        PlanCategory category = categories.get(position);
+        holder.txtCourseName.setText(category.getCategoryName());
+        holder.txtCourseCode.setText(category.getCategoryCode().trim().isEmpty()
                 ? holder.itemView.getContext().getString(R.string.no_course_code)
-                : course.getCourseCode());
-        holder.txtLecturer.setText(course.getLecturer().trim().isEmpty()
+                : category.getCategoryCode());
+        holder.txtLecturer.setText(category.getNote().trim().isEmpty()
                 ? holder.itemView.getContext().getString(R.string.no_lecturer)
-                : course.getLecturer());
+                : category.getNote());
         try {
-            holder.viewCourseColor.setBackgroundColor(Color.parseColor(course.getColor()));
+            holder.viewCourseColor.setBackgroundColor(Color.parseColor(category.getColor()));
         } catch (IllegalArgumentException ignored) {
             holder.viewCourseColor.setBackgroundColor(
                     holder.itemView.getContext().getColor(R.color.primary)
             );
         }
-        holder.itemView.setOnClickListener(v -> listener.onCourseClick(course));
+        holder.itemView.setOnClickListener(v -> listener.onCourseClick(category));
     }
 
     @Override
     public int getItemCount() {
-        return courses.size();
+        return categories.size();
     }
 
     static class CourseViewHolder extends RecyclerView.ViewHolder {

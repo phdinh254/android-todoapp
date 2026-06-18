@@ -31,6 +31,10 @@ public class HomeFragment extends Fragment {
     private TextView txtPendingTasks;
     private TextView txtCourseCount;
     private TextView txtStudyHours;
+    private TextView txtAssignmentCount;
+    private TextView txtClassCount;
+    private TextView txtPartTimeCount;
+    private TextView txtOverdueTasks;
     private TextView txtProgressSummary;
     private ProgressBar progressCompletion;
     private DatabaseHelper databaseHelper;
@@ -49,6 +53,10 @@ public class HomeFragment extends Fragment {
         txtPendingTasks = view.findViewById(R.id.txtPendingTasks);
         txtCourseCount = view.findViewById(R.id.txtCourseCount);
         txtStudyHours = view.findViewById(R.id.txtStudyHours);
+        txtAssignmentCount = view.findViewById(R.id.txtAssignmentCount);
+        txtClassCount = view.findViewById(R.id.txtClassCount);
+        txtPartTimeCount = view.findViewById(R.id.txtPartTimeCount);
+        txtOverdueTasks = view.findViewById(R.id.txtOverdueTasks);
         txtProgressSummary = view.findViewById(R.id.txtProgressSummary);
         progressCompletion = view.findViewById(R.id.progressCompletion);
         MaterialButton btnManageCourses = view.findViewById(R.id.btnManageCourses);
@@ -80,6 +88,10 @@ public class HomeFragment extends Fragment {
                 txtCourseCount.setText(String.valueOf(stats.getCourseCount()));
                 txtStudyHours.setText(String.format(Locale.getDefault(), "%.1f",
                         stats.getPlannedMinutes() / 60f));
+                txtAssignmentCount.setText(String.valueOf(stats.getAssignmentCount()));
+                txtClassCount.setText(String.valueOf(stats.getClassCount()));
+                txtPartTimeCount.setText(String.valueOf(stats.getPartTimeCount()));
+                txtOverdueTasks.setText(String.valueOf(stats.getOverduePlans()));
                 progressCompletion.setProgress(stats.getCompletionPercent());
                 txtProgressSummary.setText(getString(
                         R.string.study_progress_summary, stats.getCompletionPercent()));
