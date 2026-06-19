@@ -20,6 +20,7 @@
             android:text="@string/study_plan_form_subtitle"
             android:textAppearance="@style/TextAppearance.PersonalPlanner.Body" />
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutLocation"
             style="@style/Widget.PersonalPlanner.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -50,7 +51,7 @@
             android:text="@string/course"
             android:textAppearance="@style/TextAppearance.PersonalPlanner.Body" />
         <Spinner
-            android:id="@+id/spinnerCourse"
+            android:id="@+id/spinnerCategory"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:background="@color/surface"
@@ -93,6 +94,7 @@
                 android:background="@color/surface"
                 android:paddingHorizontal="12dp" />
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutRoom"
                 style="@style/Widget.PersonalPlanner.TextInputLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -150,6 +152,7 @@
             android:layout_marginTop="14dp"
             android:orientation="horizontal">
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutWage"
                 style="@style/Widget.PersonalPlanner.TextInputLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -177,6 +180,7 @@
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutSubject"
             style="@style/Widget.PersonalPlanner.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

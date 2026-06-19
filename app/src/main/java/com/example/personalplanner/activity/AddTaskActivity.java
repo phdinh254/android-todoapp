@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -16,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.personalplanner.R;
 import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.data.model.PlanCategory;
+import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.notification.ReminderScheduler;
 import com.example.personalplanner.utils.SessionManager;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -48,6 +50,10 @@ public class AddTaskActivity extends AppCompatActivity {
     private Spinner spinnerReminderLead;
     private SwitchMaterial switchReminder;
     private CheckBox chkSubmitted;
+    private View layoutLocation;
+    private View layoutRoom;
+    private View layoutSubject;
+    private View layoutWage;
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
     private final ArrayList<PlanCategory> categories = new ArrayList<>();
@@ -77,14 +83,18 @@ public class AddTaskActivity extends AppCompatActivity {
         btnChooseTime = findViewById(R.id.btnChooseTime);
         btnChooseEndTime = findViewById(R.id.btnChooseEndTime);
         btnSaveTask = findViewById(R.id.btnSaveTask);
-        spinnerCategory = findViewById(R.id.spinnerCourse);
+        spinnerCategory = findViewById(R.id.spinnerCategory);
         spinnerPlanType = findViewById(R.id.spinnerPlanType);
         spinnerPriority = findViewById(R.id.spinnerPriority);
         spinnerRepeatRule = findViewById(R.id.spinnerRepeatRule);
         spinnerReminderLead = findViewById(R.id.spinnerReminderLead);
         switchReminder = findViewById(R.id.switchReminder);
         chkSubmitted = findViewById(R.id.chkSubmitted);
-        Button btnManageCategories = findViewById(R.id.btnManageCourses);
+        layoutLocation = findViewById(R.id.layoutLocation);
+        layoutRoom = findViewById(R.id.layoutRoom);
+        layoutSubject = findViewById(R.id.layoutSubject);
+        layoutWage = findViewById(R.id.layoutWage);
+        Button btnManageCategories = findViewById(R.id.btnManageCategories);
         Button btnCancel = findViewById(R.id.btnCancel);
         databaseHelper = new DatabaseHelper(this);
         sessionManager = new SessionManager(this);
@@ -94,6 +104,8 @@ public class AddTaskActivity extends AppCompatActivity {
         bindSpinner(spinnerRepeatRule, R.array.repeat_rule_names);
         bindSpinner(spinnerReminderLead, R.array.reminder_lead_names);
         spinnerPriority.setSelection(1);
+        spinnerPlanType.setOnItemSelectedListener(new SimpleItemSelectedListener(this::updateTypeFields));
+        updateTypeFields();
 
         selectedDate = dateFormat.format(calendar.getTime());
         selectedTime = timeFormat.format(calendar.getTime());
@@ -107,7 +119,7 @@ public class AddTaskActivity extends AppCompatActivity {
         btnChooseEndTime.setOnClickListener(v -> showTimePicker(endCalendar, false));
         btnSaveTask.setOnClickListener(v -> savePlan());
         btnManageCategories.setOnClickListener(v ->
-                startActivity(new Intent(this, CourseListActivity.class)));
+                startActivity(new Intent(this, PlanCategoryListActivity.class)));
         btnCancel.setOnClickListener(v -> finish());
     }
 
@@ -176,7 +188,7 @@ public class AddTaskActivity extends AppCompatActivity {
             return;
         }
         if (categories.isEmpty()) {
-            Toast.makeText(this, R.string.course_loading, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.category_loading, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -195,9 +207,11 @@ public class AddTaskActivity extends AppCompatActivity {
         setSaving(true);
         executorService.execute(() -> {
             int saved = 0;
+            int conflicted = 0;
             long firstPlanId = -1;
             for (String date : dates) {
                 if (databaseHelper.hasTimeConflict(userId, date, selectedTime, selectedEndTime, -1)) {
+                    conflicted++;
                     continue;
                 }
                 long planId = databaseHelper.addStudyPlan(
@@ -220,9 +234,14 @@ public class AddTaskActivity extends AppCompatActivity {
             }
             long firstId = firstPlanId;
             int savedCount = saved;
+            int conflictCount = conflicted;
             runOnUiThread(() -> {
                 if (savedCount > 0) {
-                    Toast.makeText(this, R.string.task_added, Toast.LENGTH_SHORT).show();
+                    String message = dates.size() > 1
+                            ? getString(R.string.repeat_save_summary, savedCount,
+                            dates.size(), conflictCount)
+                            : getString(R.string.task_added);
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                     finish();
                 } else {
                     setSaving(false);
@@ -245,18 +264,47 @@ public class AddTaskActivity extends AppCompatActivity {
             current.setTime(dateFormat.parse(startDate));
             Calendar until = Calendar.getInstance();
             until.setTime(dateFormat.parse(repeatUntil));
-            int step = "DAILY".equals(repeatRule) ? Calendar.DAY_OF_MONTH : Calendar.WEEK_OF_YEAR;
-            for (int count = 0; count < 90; count++) {
-                current.add(step, 1);
+            for (int count = 0; count < 365; count++) {
+                current.add(Calendar.DAY_OF_MONTH, 1);
                 if (current.after(until)) {
                     break;
                 }
-                dates.add(dateFormat.format(current.getTime()));
+                if (shouldIncludeRepeatDate(current, repeatRule, startDate)) {
+                    dates.add(dateFormat.format(current.getTime()));
+                }
             }
         } catch (ParseException ignored) {
             return dates;
         }
         return dates;
+    }
+
+    private boolean shouldIncludeRepeatDate(Calendar date, String repeatRule, String startDate) {
+        int dayOfWeek = date.get(Calendar.DAY_OF_WEEK);
+        if ("DAILY".equals(repeatRule)) {
+            return true;
+        }
+        if ("WEEKLY".equals(repeatRule)) {
+            try {
+                Calendar start = Calendar.getInstance();
+                start.setTime(dateFormat.parse(startDate));
+                return dayOfWeek == start.get(Calendar.DAY_OF_WEEK);
+            } catch (ParseException ignored) {
+                return false;
+            }
+        }
+        if ("MON_WED_FRI".equals(repeatRule)) {
+            return dayOfWeek == Calendar.MONDAY
+                    || dayOfWeek == Calendar.WEDNESDAY
+                    || dayOfWeek == Calendar.FRIDAY;
+        }
+        if ("TUE_THU".equals(repeatRule)) {
+            return dayOfWeek == Calendar.TUESDAY || dayOfWeek == Calendar.THURSDAY;
+        }
+        if ("WEEKEND".equals(repeatRule)) {
+            return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY;
+        }
+        return false;
     }
 
     private int parseInt(EditText editText, int fallback) {
@@ -290,6 +338,39 @@ public class AddTaskActivity extends AppCompatActivity {
     private void setSaving(boolean saving) {
         btnSaveTask.setEnabled(!saving);
         btnSaveTask.setText(saving ? R.string.saving : R.string.save_study_plan);
+    }
+
+    private void updateTypeFields() {
+        String planType = valueFromArray(R.array.plan_type_values, spinnerPlanType.getSelectedItemPosition());
+        boolean isAssignment = StudyPlan.TYPE_ASSIGNMENT.equals(planType);
+        boolean isClass = StudyPlan.TYPE_CLASS.equals(planType);
+        boolean isPartTime = StudyPlan.TYPE_PART_TIME.equals(planType);
+        boolean isExam = StudyPlan.TYPE_EXAM.equals(planType);
+        boolean isProject = StudyPlan.TYPE_PROJECT.equals(planType);
+
+        layoutLocation.setVisibility((isClass || isPartTime || isExam) ? View.VISIBLE : View.GONE);
+        layoutRoom.setVisibility(isClass ? View.VISIBLE : View.GONE);
+        layoutWage.setVisibility(isPartTime ? View.VISIBLE : View.GONE);
+        layoutSubject.setVisibility((isAssignment || isClass || isExam || isProject)
+                ? View.VISIBLE : View.GONE);
+        chkSubmitted.setVisibility(isAssignment ? View.VISIBLE : View.GONE);
+    }
+
+    private static class SimpleItemSelectedListener
+            implements android.widget.AdapterView.OnItemSelectedListener {
+        private final Runnable callback;
+
+        SimpleItemSelectedListener(Runnable callback) {
+            this.callback = callback;
+        }
+
+        public void onItemSelected(android.widget.AdapterView<?> parent, View view,
+                                   int position, long id) {
+            callback.run();
+        }
+
+        public void onNothingSelected(android.widget.AdapterView<?> parent) {
+        }
     }
 
     @Override

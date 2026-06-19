@@ -426,6 +426,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return plans;
     }
 
+    public ArrayList<StudyPlan> getStudyPlansBetween(int userId, String startDate, String endDate) {
+        ArrayList<StudyPlan> plans = new ArrayList<>();
+        String sql = selectPlanSql() +
+                " WHERE p.user_id = ? AND p.date BETWEEN ? AND ? ORDER BY p.date ASC, p.time ASC";
+        try (SQLiteDatabase db = getReadableDatabase();
+             Cursor cursor = db.rawQuery(sql,
+                     new String[]{String.valueOf(userId), startDate, endDate})) {
+            while (cursor.moveToNext()) {
+                plans.add(mapStudyPlan(cursor));
+            }
+        }
+        return plans;
+    }
+
     public ArrayList<StudyPlan> getUpcomingPlans(int userId, String fromDate, int limit) {
         ArrayList<StudyPlan> plans = new ArrayList<>();
         String sql = selectPlanSql() +

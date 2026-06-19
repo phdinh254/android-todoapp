@@ -28,11 +28,11 @@
     <string name="error_email_exists">Email da duoc su dung</string>
     <string name="error_login_invalid">Ten dang nhap hoac mat khau khong dung</string>
 
-    <string name="nav_home">Tong quan</string>
+    <string name="nav_home">Trang chủ</string>
     <string name="nav_tasks">Ke hoach</string>
     <string name="nav_add">Them</string>
-    <string name="nav_calendar">Lich</string>
-    <string name="nav_profile">Ca nhan</string>
+    <string name="nav_calendar">Lịch</string>
+    <string name="nav_profile">Cá nhân</string>
     <string name="welcome_student">Xin chao, %1$s</string>
     <string name="default_user">sinh vien</string>
     <string name="home_subtitle">Theo doi lich hoc, bai tap, ca lam them va cac viec can hoan thanh.</string>
@@ -90,6 +90,7 @@
     <string name="repeat_until">Lap lai den ngay (yyyy-MM-dd)</string>
     <string name="reminder_lead">Nhac truoc</string>
     <string name="schedule_conflict_warning">Thoi gian nay dang trung voi ke hoach khac.</string>
+    <string name="repeat_save_summary">Da tao %1$d/%2$d ke hoach. Bo qua %3$d ngay bi trung gio.</string>
     <string name="save_study_plan">Luu ke hoach</string>
     <string name="update_study_plan">Cap nhat ke hoach</string>
     <string name="delete_study_plan">Xoa ke hoach</string>
@@ -128,11 +129,41 @@
     <string name="course_delete_failed">Khong the xoa nhom ke hoach</string>
     <string name="no_course_code">Chua co ma nhom</string>
     <string name="no_lecturer">Chua co ghi chu</string>
+    <string name="category_name">Ten nhom ke hoach</string>
+    <string name="category_list_title">Nhom ke hoach cua ban</string>
+    <string name="category_list_subtitle">Tao cac nhom nhu Hoc tap, Bai tap, Di hoc, Lam them de phan loai ke hoach.</string>
+    <string name="category_form_title">Thong tin nhom ke hoach</string>
+    <string name="category_form_subtitle">Ma nhom va ghi chu co the de trong.</string>
+    <string name="category_code">Ma nhom</string>
+    <string name="category_note">Ghi chu</string>
+    <string name="category_loading">Danh sach nhom ke hoach dang duoc tai</string>
+    <string name="category_color">Mau nhan dien</string>
+    <string name="save_category">Luu nhom</string>
+    <string name="delete_category">Xoa nhom</string>
+    <string name="confirm_delete_category">Ke hoach thuoc nhom nay se chuyen ve "Chua phan nhom".</string>
+    <string name="error_category_name_required">Vui long nhap ten nhom ke hoach</string>
+    <string name="category_saved">Da luu nhom ke hoach</string>
+    <string name="category_save_failed">Khong the luu nhom ke hoach</string>
+    <string name="category_deleted">Da xoa nhom ke hoach</string>
+    <string name="category_delete_failed">Khong the xoa nhom ke hoach</string>
+    <string name="no_category_code">Chua co ma nhom</string>
+    <string name="no_category_note">Chua co ghi chu</string>
+    <string name="status_overdue">Qua han</string>
+    <string name="type_assignment">Bai tap</string>
+    <string name="type_class">Di hoc</string>
+    <string name="type_part_time">Lam them</string>
+    <string name="type_personal">Ca nhan</string>
+    <string name="type_exam">Thi</string>
+    <string name="type_project">Du an</string>
 
     <string name="calendar_title">Lich ke hoach</string>
     <string name="calendar_subtitle">Chon ngay de xem viec hoc, bai tap, ca lam them va cac ke hoach khac.</string>
     <string name="tasks_on_date">Ke hoach ngay %1$s</string>
     <string name="upcoming_plans">Ke hoach sap toi</string>
+    <string name="calendar_mode_day">Ngay</string>
+    <string name="calendar_mode_week">Tuan</string>
+    <string name="calendar_mode_month">Thang</string>
+    <string name="plans_in_range">Ke hoach tu %1$s den %2$s</string>
     <string name="empty_calendar">Ngay nay chua co ke hoach nao.</string>
     <string name="profile_title">Ho so sinh vien</string>
     <string name="profile_subtitle">Quan ly tai khoan va du lieu ke hoach tren thiet bi.</string>
@@ -177,11 +208,17 @@
         <item>NONE</item>
         <item>DAILY</item>
         <item>WEEKLY</item>
+        <item>MON_WED_FRI</item>
+        <item>TUE_THU</item>
+        <item>WEEKEND</item>
     </string-array>
     <string-array name="repeat_rule_names">
         <item>Khong lap lai</item>
         <item>Hang ngay</item>
         <item>Hang tuan</item>
+        <item>Thu 2 - 4 - 6</item>
+        <item>Thu 3 - 5</item>
+        <item>Cuoi tuan</item>
     </string-array>
     <string-array name="reminder_lead_values">
         <item>0</item>
@@ -195,7 +232,7 @@
         <item>Truoc 15 phut</item>
         <item>Truoc 30 phut</item>
     </string-array>
-    <string-array name="course_color_names">
+    <string-array name="category_color_names">
         <item>Xanh ngoc</item>
         <item>Xanh duong</item>
         <item>Tim</item>

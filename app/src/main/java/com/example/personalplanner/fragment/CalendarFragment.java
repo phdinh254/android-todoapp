@@ -22,6 +22,7 @@ import com.example.personalplanner.adapter.TaskAdapter;
 import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.utils.SessionManager;
+import com.google.android.material.chip.ChipGroup;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ public class CalendarFragment extends Fragment {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     private String selectedDate = dateFormat.format(Calendar.getInstance().getTime());
+    private int calendarMode = R.id.chipModeDay;
 
     @Nullable
     @Override
@@ -50,6 +52,7 @@ public class CalendarFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_calendar, container, false);
         CalendarView calendarView = view.findViewById(R.id.calendarView);
+        ChipGroup chipGroupCalendarMode = view.findViewById(R.id.chipGroupCalendarMode);
         txtSelectedDate = view.findViewById(R.id.txtSelectedDate);
         txtCalendarEmpty = view.findViewById(R.id.txtCalendarEmpty);
         recyclerCalendarTasks = view.findViewById(R.id.recyclerCalendarTasks);
@@ -87,6 +90,10 @@ public class CalendarFragment extends Fragment {
             selectedDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day);
             loadDate();
         });
+        chipGroupCalendarMode.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            calendarMode = checkedIds.isEmpty() ? R.id.chipModeDay : checkedIds.get(0);
+            loadDate();
+        });
         loadDate();
         return view;
     }
@@ -99,10 +106,15 @@ public class CalendarFragment extends Fragment {
 
     private void loadDate() {
         if (executorService == null || executorService.isShutdown()) return;
-        txtSelectedDate.setText(getString(R.string.tasks_on_date, selectedDate));
+        DateRange range = resolveDateRange();
+        txtSelectedDate.setText(range.startDate.equals(range.endDate)
+                ? getString(R.string.tasks_on_date, selectedDate)
+                : getString(R.string.plans_in_range, range.startDate, range.endDate));
         executorService.execute(() -> {
-            ArrayList<StudyPlan> plans = databaseHelper.getStudyPlansByDate(
-                    sessionManager.getUserId(), selectedDate);
+            ArrayList<StudyPlan> plans = range.startDate.equals(range.endDate)
+                    ? databaseHelper.getStudyPlansByDate(sessionManager.getUserId(), selectedDate)
+                    : databaseHelper.getStudyPlansBetween(
+                    sessionManager.getUserId(), range.startDate, range.endDate);
             ArrayList<StudyPlan> upcoming = databaseHelper.getUpcomingPlans(
                     sessionManager.getUserId(), selectedDate, 5);
             mainHandler.post(() -> {
@@ -113,6 +125,36 @@ public class CalendarFragment extends Fragment {
                 recyclerCalendarTasks.setVisibility(plans.isEmpty() ? View.GONE : View.VISIBLE);
             });
         });
+    }
+
+    private DateRange resolveDateRange() {
+        Calendar start = Calendar.getInstance();
+        try {
+            start.setTime(dateFormat.parse(selectedDate));
+        } catch (Exception ignored) {
+            return new DateRange(selectedDate, selectedDate);
+        }
+        Calendar end = (Calendar) start.clone();
+        if (calendarMode == R.id.chipModeWeek) {
+            start.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+            end.setTime(start.getTime());
+            end.add(Calendar.DAY_OF_MONTH, 6);
+        } else if (calendarMode == R.id.chipModeMonth) {
+            start.set(Calendar.DAY_OF_MONTH, 1);
+            end.setTime(start.getTime());
+            end.set(Calendar.DAY_OF_MONTH, end.getActualMaximum(Calendar.DAY_OF_MONTH));
+        }
+        return new DateRange(dateFormat.format(start.getTime()), dateFormat.format(end.getTime()));
+    }
+
+    private static class DateRange {
+        final String startDate;
+        final String endDate;
+
+        DateRange(String startDate, String endDate) {
+            this.startDate = startDate;
+            this.endDate = endDate;
+        }
     }
 
     private void openDetail(StudyPlan plan) {

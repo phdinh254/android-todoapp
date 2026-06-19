@@ -15,9 +15,9 @@ import com.example.personalplanner.R;
 import com.example.personalplanner.fragment.CalendarFragment;
 import com.example.personalplanner.fragment.HomeFragment;
 import com.example.personalplanner.fragment.ProfileFragment;
-import com.example.personalplanner.fragment.TaskFragment;
 import com.example.personalplanner.utils.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         requestNotificationPermission();
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        FloatingActionButton fabAddTask = findViewById(R.id.fabAddTask);
+        fabAddTask.setOnClickListener(v -> startActivity(new Intent(this, AddTaskActivity.class)));
 
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
@@ -71,18 +73,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.nav_add) {
-                startActivity(new Intent(this, AddTaskActivity.class));
-                bottomNavigationView.post(
-                        () -> bottomNavigationView.setSelectedItemId(currentSelectedItemId)
-                );
-                return false;
-            }
-
             Fragment fragment;
-            if (itemId == R.id.nav_task) {
-                fragment = new TaskFragment();
-            } else if (itemId == R.id.nav_calendar) {
+            if (itemId == R.id.nav_calendar) {
                 fragment = new CalendarFragment();
             } else if (itemId == R.id.nav_profile) {
                 fragment = new ProfileFragment();

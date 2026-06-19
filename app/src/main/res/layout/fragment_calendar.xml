@@ -36,6 +36,37 @@
             android:weekSeparatorLineColor="@color/outline" />
     </com.google.android.material.card.MaterialCardView>
 
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupCalendarMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipModeDay"
+            style="@style/Widget.MaterialComponents.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/calendar_mode_day" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipModeWeek"
+            style="@style/Widget.MaterialComponents.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/calendar_mode_week" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipModeMonth"
+            style="@style/Widget.MaterialComponents.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/calendar_mode_month" />
+    </com.google.android.material.chip.ChipGroup>
+
     <TextView
         android:id="@+id/txtSelectedDate"
         android:layout_width="match_parent"

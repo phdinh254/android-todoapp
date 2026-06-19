@@ -11,11 +11,11 @@
         android:theme="@style/Theme.PersonalPlanner">
 
         <activity
-            android:name=".activity.CourseFormActivity"
+            android:name=".activity.PlanCategoryFormActivity"
             android:exported="false" />
 
         <activity
-            android:name=".activity.CourseListActivity"
+            android:name=".activity.PlanCategoryListActivity"
             android:exported="false" />
 
         <activity

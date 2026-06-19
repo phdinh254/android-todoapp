@@ -3,6 +3,7 @@ package com.example.personalplanner.activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -44,6 +45,10 @@ public class TaskDetailActivity extends AppCompatActivity {
     private Button btnUpdateTask;
     private Button btnDeleteTask;
     private CheckBox chkSubmitted;
+    private View layoutLocation;
+    private View layoutRoom;
+    private View layoutSubject;
+    private View layoutWage;
     private Spinner spinnerCategory;
     private Spinner spinnerPlanType;
     private Spinner spinnerStatus;
@@ -87,7 +92,11 @@ public class TaskDetailActivity extends AppCompatActivity {
         btnUpdateTask = findViewById(R.id.btnUpdateTask);
         btnDeleteTask = findViewById(R.id.btnDeleteTask);
         chkSubmitted = findViewById(R.id.chkSubmitted);
-        spinnerCategory = findViewById(R.id.spinnerCourse);
+        layoutLocation = findViewById(R.id.layoutLocation);
+        layoutRoom = findViewById(R.id.layoutRoom);
+        layoutSubject = findViewById(R.id.layoutSubject);
+        layoutWage = findViewById(R.id.layoutWage);
+        spinnerCategory = findViewById(R.id.spinnerCategory);
         spinnerPlanType = findViewById(R.id.spinnerPlanType);
         spinnerStatus = findViewById(R.id.spinnerStatus);
         spinnerPriority = findViewById(R.id.spinnerPriority);
@@ -155,6 +164,8 @@ public class TaskDetailActivity extends AppCompatActivity {
                 String.valueOf(selectedReminderMinutes));
         switchReminder.setChecked(getIntent().getBooleanExtra("reminder_enabled", false));
         chkSubmitted.setChecked(getIntent().getBooleanExtra("submitted", false));
+        spinnerPlanType.setOnItemSelectedListener(new SimpleItemSelectedListener(this::updateTypeFields));
+        updateTypeFields();
         syncCalendar();
         updateDateTimeLabels();
         return true;
@@ -343,12 +354,45 @@ public class TaskDetailActivity extends AppCompatActivity {
         btnDeleteTask.setEnabled(!working);
     }
 
+    private void updateTypeFields() {
+        String planType = valueFromArray(R.array.plan_type_values, spinnerPlanType.getSelectedItemPosition());
+        boolean isAssignment = StudyPlan.TYPE_ASSIGNMENT.equals(planType);
+        boolean isClass = StudyPlan.TYPE_CLASS.equals(planType);
+        boolean isPartTime = StudyPlan.TYPE_PART_TIME.equals(planType);
+        boolean isExam = StudyPlan.TYPE_EXAM.equals(planType);
+        boolean isProject = StudyPlan.TYPE_PROJECT.equals(planType);
+
+        layoutLocation.setVisibility((isClass || isPartTime || isExam) ? View.VISIBLE : View.GONE);
+        layoutRoom.setVisibility(isClass ? View.VISIBLE : View.GONE);
+        layoutWage.setVisibility(isPartTime ? View.VISIBLE : View.GONE);
+        layoutSubject.setVisibility((isAssignment || isClass || isExam || isProject)
+                ? View.VISIBLE : View.GONE);
+        chkSubmitted.setVisibility(isAssignment ? View.VISIBLE : View.GONE);
+    }
+
     private String value(String input) {
         return input == null ? "" : input;
     }
 
     private String valueOrDefault(String input, String fallback) {
         return input == null || input.trim().isEmpty() ? fallback : input;
+    }
+
+    private static class SimpleItemSelectedListener
+            implements android.widget.AdapterView.OnItemSelectedListener {
+        private final Runnable callback;
+
+        SimpleItemSelectedListener(Runnable callback) {
+            this.callback = callback;
+        }
+
+        public void onItemSelected(android.widget.AdapterView<?> parent, View view,
+                                   int position, long id) {
+            callback.run();
+        }
+
+        public void onNothingSelected(android.widget.AdapterView<?> parent) {
+        }
     }
 
     @Override

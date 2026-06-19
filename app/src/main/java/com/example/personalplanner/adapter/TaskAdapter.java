@@ -13,7 +13,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.personalplanner.R;
 import com.example.personalplanner.data.model.StudyPlan;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder> {
     public interface OnTaskActionListener {
@@ -62,7 +65,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
                 ? View.GONE : View.VISIBLE);
         holder.txtTaskDateTime.setText(holder.itemView.getContext().getString(
                 R.string.task_date_time, plan.getDate(), plan.getTime()));
-        holder.txtCourseName.setText(plan.getCategoryName().trim().isEmpty()
+        holder.txtCategoryName.setText(plan.getCategoryName().trim().isEmpty()
                 ? holder.itemView.getContext().getString(R.string.uncategorized_course)
                 : plan.getCategoryName());
         String[] typeValues = holder.itemView.getResources().getStringArray(R.array.plan_type_values);
@@ -86,9 +89,25 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
         holder.txtTaskTitle.setPaintFlags(plan.getStatus() == StudyPlan.STATUS_COMPLETED
                 ? flags | Paint.STRIKE_THRU_TEXT_FLAG
                 : flags & ~Paint.STRIKE_THRU_TEXT_FLAG);
+        holder.txtOverdueBadge.setVisibility(isOverdue(plan) ? View.VISIBLE : View.GONE);
         holder.itemView.setOnClickListener(v -> listener.onTaskClick(plan));
         holder.chkStatus.setOnCheckedChangeListener((button, checked) ->
                 listener.onStatusChanged(plan, checked));
+    }
+
+    private boolean isOverdue(StudyPlan plan) {
+        if (plan.getStatus() == StudyPlan.STATUS_COMPLETED
+                || plan.getStatus() == StudyPlan.STATUS_CANCELLED) {
+            return false;
+        }
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            Date planDate = dateFormat.parse(plan.getDate());
+            Date today = dateFormat.parse(dateFormat.format(new Date()));
+            return planDate != null && today != null && planDate.before(today);
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     @Override
@@ -100,8 +119,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
         final TextView txtTaskTitle;
         final TextView txtTaskDescription;
         final TextView txtTaskDateTime;
-        final TextView txtCourseName;
+        final TextView txtCategoryName;
         final TextView txtStudyMeta;
+        final TextView txtOverdueBadge;
         final CheckBox chkStatus;
 
         PlanViewHolder(@NonNull View itemView) {
@@ -109,8 +129,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
             txtTaskTitle = itemView.findViewById(R.id.txtTaskTitle);
             txtTaskDescription = itemView.findViewById(R.id.txtTaskDescription);
             txtTaskDateTime = itemView.findViewById(R.id.txtTaskDateTime);
-            txtCourseName = itemView.findViewById(R.id.txtCourseName);
+            txtCategoryName = itemView.findViewById(R.id.txtCategoryName);
             txtStudyMeta = itemView.findViewById(R.id.txtStudyMeta);
+            txtOverdueBadge = itemView.findViewById(R.id.txtOverdueBadge);
             chkStatus = itemView.findViewById(R.id.chkStatus);
         }
     }

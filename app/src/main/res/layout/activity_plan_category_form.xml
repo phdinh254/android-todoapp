@@ -13,7 +13,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/course_form_title"
+            android:text="@string/category_form_title"
             android:textAppearance="@style/TextAppearance.PersonalPlanner.Headline" />
 
         <TextView
@@ -21,16 +21,16 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="24dp"
-            android:text="@string/course_form_subtitle"
+            android:text="@string/category_form_subtitle"
             android:textAppearance="@style/TextAppearance.PersonalPlanner.Body" />
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.PersonalPlanner.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/course_name">
+            android:hint="@string/category_name">
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edtCourseName"
+                android:id="@+id/edtCategoryName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapWords"
@@ -42,9 +42,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="@string/course_code">
+            android:hint="@string/category_code">
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edtCourseCode"
+                android:id="@+id/edtCategoryCode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapCharacters"
@@ -56,9 +56,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="@string/lecturer">
+            android:hint="@string/category_note">
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edtLecturer"
+                android:id="@+id/edtCategoryNote"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapWords"
@@ -69,11 +69,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="@string/course_color"
+            android:text="@string/category_color"
             android:textAppearance="@style/TextAppearance.PersonalPlanner.Body" />
 
         <Spinner
-            android:id="@+id/spinnerCourseColor"
+            android:id="@+id/spinnerCategoryColor"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="6dp"
@@ -81,20 +81,20 @@
             android:paddingHorizontal="12dp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSaveCourse"
+            android:id="@+id/btnSaveCategory"
             style="@style/Widget.PersonalPlanner.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="@string/save_course" />
+            android:text="@string/save_category" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDeleteCourse"
+            android:id="@+id/btnDeleteCategory"
             style="@style/Widget.PersonalPlanner.Button.Danger"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="@string/delete_course" />
+            android:text="@string/delete_category" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBack"

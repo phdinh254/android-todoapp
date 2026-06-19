@@ -41,7 +41,7 @@ public class TaskFragment extends Fragment {
     private EditText edtSearchTask;
     private TextView txtEmptyTask;
     private ProgressBar progressTasks;
-    private Spinner spinnerCourseFilter;
+    private Spinner spinnerCategoryFilter;
     private TaskAdapter taskAdapter;
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
@@ -50,6 +50,7 @@ public class TaskFragment extends Fragment {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Runnable searchRunnable = this::loadPlans;
     private int statusFilter = DatabaseHelper.FILTER_ALL;
+    private String typeFilter = "";
 
     @Nullable
     @Override
@@ -60,8 +61,9 @@ public class TaskFragment extends Fragment {
         edtSearchTask = view.findViewById(R.id.edtSearchTask);
         txtEmptyTask = view.findViewById(R.id.txtEmptyTask);
         progressTasks = view.findViewById(R.id.progressTasks);
-        spinnerCourseFilter = view.findViewById(R.id.spinnerCourseFilter);
+        spinnerCategoryFilter = view.findViewById(R.id.spinnerCategoryFilter);
         ChipGroup chipGroupFilter = view.findViewById(R.id.chipGroupFilter);
+        ChipGroup chipGroupTypeFilter = view.findViewById(R.id.chipGroupTypeFilter);
         databaseHelper = new DatabaseHelper(requireContext());
         sessionManager = new SessionManager(requireContext());
         executorService = Executors.newSingleThreadExecutor();
@@ -94,7 +96,12 @@ public class TaskFragment extends Fragment {
                     : DatabaseHelper.FILTER_ALL;
             loadPlans();
         });
-        spinnerCourseFilter.setOnItemSelectedListener(new SimpleItemSelectedListener(this::loadPlans));
+        chipGroupTypeFilter.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            int id = checkedIds.isEmpty() ? R.id.chipTypeAll : checkedIds.get(0);
+            typeFilter = resolveTypeFilter(id);
+            loadPlans();
+        });
+        spinnerCategoryFilter.setOnItemSelectedListener(new SimpleItemSelectedListener(this::loadPlans));
         loadCategories();
         return view;
     }
@@ -121,10 +128,10 @@ public class TaskFragment extends Fragment {
                 ArrayAdapter<PlanCategory> adapter = new ArrayAdapter<>(
                         requireContext(), android.R.layout.simple_spinner_item, categories);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                spinnerCourseFilter.setAdapter(adapter);
+                spinnerCategoryFilter.setAdapter(adapter);
                 for (int i = 0; i < categories.size(); i++) {
                     if (categories.get(i).getCategoryId() == selectedId) {
-                        spinnerCourseFilter.setSelection(i);
+                        spinnerCategoryFilter.setSelection(i);
                         break;
                     }
                 }
@@ -139,7 +146,7 @@ public class TaskFragment extends Fragment {
         showLoading(true);
         executorService.execute(() -> {
             ArrayList<StudyPlan> plans = databaseHelper.getStudyPlans(
-                    sessionManager.getUserId(), keyword, statusFilter, categoryId);
+                    sessionManager.getUserId(), keyword, statusFilter, categoryId, typeFilter);
             mainHandler.post(() -> {
                 if (!isAdded() || getView() == null) return;
                 taskAdapter.setData(plans);
@@ -154,8 +161,30 @@ public class TaskFragment extends Fragment {
     }
 
     private int getCategoryFilter() {
-        int position = spinnerCourseFilter == null ? 0 : spinnerCourseFilter.getSelectedItemPosition();
+        int position = spinnerCategoryFilter == null ? 0 : spinnerCategoryFilter.getSelectedItemPosition();
         return position >= 0 && position < categories.size() ? categories.get(position).getCategoryId() : 0;
+    }
+
+    private String resolveTypeFilter(int chipId) {
+        if (chipId == R.id.chipTypeAssignment) {
+            return StudyPlan.TYPE_ASSIGNMENT;
+        }
+        if (chipId == R.id.chipTypeClass) {
+            return StudyPlan.TYPE_CLASS;
+        }
+        if (chipId == R.id.chipTypePartTime) {
+            return StudyPlan.TYPE_PART_TIME;
+        }
+        if (chipId == R.id.chipTypePersonal) {
+            return StudyPlan.TYPE_PERSONAL;
+        }
+        if (chipId == R.id.chipTypeExam) {
+            return StudyPlan.TYPE_EXAM;
+        }
+        if (chipId == R.id.chipTypeProject) {
+            return StudyPlan.TYPE_PROJECT;
+        }
+        return "";
     }
 
     private void updatePlanStatus(StudyPlan plan, boolean checked) {

@@ -18,16 +18,16 @@ import com.google.android.material.button.MaterialButton;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class CourseFormActivity extends AppCompatActivity {
+public class PlanCategoryFormActivity extends AppCompatActivity {
     private static final String[] COLORS =
             {"#1F6F68", "#3568A8", "#8A5A9E", "#C06A3D", "#3C7A57", "#A04A59"};
 
-    private EditText edtCourseName;
-    private EditText edtCourseCode;
-    private EditText edtLecturer;
-    private Spinner spinnerCourseColor;
-    private MaterialButton btnSaveCourse;
-    private MaterialButton btnDeleteCourse;
+    private EditText edtCategoryName;
+    private EditText edtCategoryCode;
+    private EditText edtCategoryNote;
+    private Spinner spinnerCategoryColor;
+    private MaterialButton btnSaveCategory;
+    private MaterialButton btnDeleteCategory;
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -36,73 +36,73 @@ public class CourseFormActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_course_form);
+        setContentView(R.layout.activity_plan_category_form);
 
-        edtCourseName = findViewById(R.id.edtCourseName);
-        edtCourseCode = findViewById(R.id.edtCourseCode);
-        edtLecturer = findViewById(R.id.edtLecturer);
-        spinnerCourseColor = findViewById(R.id.spinnerCourseColor);
-        btnSaveCourse = findViewById(R.id.btnSaveCourse);
-        btnDeleteCourse = findViewById(R.id.btnDeleteCourse);
+        edtCategoryName = findViewById(R.id.edtCategoryName);
+        edtCategoryCode = findViewById(R.id.edtCategoryCode);
+        edtCategoryNote = findViewById(R.id.edtCategoryNote);
+        spinnerCategoryColor = findViewById(R.id.spinnerCategoryColor);
+        btnSaveCategory = findViewById(R.id.btnSaveCategory);
+        btnDeleteCategory = findViewById(R.id.btnDeleteCategory);
         MaterialButton btnBack = findViewById(R.id.btnBack);
         databaseHelper = new DatabaseHelper(this);
         sessionManager = new SessionManager(this);
 
         ArrayAdapter<CharSequence> colorAdapter = ArrayAdapter.createFromResource(
                 this,
-                R.array.course_color_names,
+                R.array.category_color_names,
                 android.R.layout.simple_spinner_item
         );
         colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCourseColor.setAdapter(colorAdapter);
-        readCourse();
+        spinnerCategoryColor.setAdapter(colorAdapter);
+        readCategory();
 
-        btnSaveCourse.setOnClickListener(v -> saveCourse());
-        btnDeleteCourse.setOnClickListener(v -> confirmDelete());
+        btnSaveCategory.setOnClickListener(v -> saveCategory());
+        btnDeleteCategory.setOnClickListener(v -> confirmDelete());
         btnBack.setOnClickListener(v -> finish());
     }
 
-    private void readCourse() {
+    private void readCategory() {
         categoryId = getIntent().getIntExtra("category_id", -1);
         if (categoryId == -1) {
-            btnDeleteCourse.setVisibility(View.GONE);
+            btnDeleteCategory.setVisibility(View.GONE);
             return;
         }
-        edtCourseName.setText(getIntent().getStringExtra("category_name"));
-        edtCourseCode.setText(getIntent().getStringExtra("category_code"));
-        edtLecturer.setText(getIntent().getStringExtra("note"));
+        edtCategoryName.setText(getIntent().getStringExtra("category_name"));
+        edtCategoryCode.setText(getIntent().getStringExtra("category_code"));
+        edtCategoryNote.setText(getIntent().getStringExtra("note"));
         String color = getIntent().getStringExtra("color");
         for (int index = 0; index < COLORS.length; index++) {
             if (COLORS[index].equals(color)) {
-                spinnerCourseColor.setSelection(index);
+                spinnerCategoryColor.setSelection(index);
                 break;
             }
         }
     }
 
-    private void saveCourse() {
-        String name = edtCourseName.getText().toString().trim();
+    private void saveCategory() {
+        String name = edtCategoryName.getText().toString().trim();
         if (name.isEmpty()) {
-            edtCourseName.setError(getString(R.string.error_course_name_required));
-            edtCourseName.requestFocus();
+            edtCategoryName.setError(getString(R.string.error_category_name_required));
+            edtCategoryName.requestFocus();
             return;
         }
-        btnSaveCourse.setEnabled(false);
+        btnSaveCategory.setEnabled(false);
         int userId = sessionManager.getUserId();
-        String code = edtCourseCode.getText().toString().trim();
-        String lecturer = edtLecturer.getText().toString().trim();
-        String color = COLORS[spinnerCourseColor.getSelectedItemPosition()];
+        String code = edtCategoryCode.getText().toString().trim();
+        String note = edtCategoryNote.getText().toString().trim();
+        String color = COLORS[spinnerCategoryColor.getSelectedItemPosition()];
         executorService.execute(() -> {
             boolean success = categoryId == -1
-                    ? databaseHelper.addCategory(name, code, lecturer, color, userId) != -1
-                    : databaseHelper.updateCategory(categoryId, name, code, lecturer, color, userId);
+                    ? databaseHelper.addCategory(name, code, note, color, userId) != -1
+                    : databaseHelper.updateCategory(categoryId, name, code, note, color, userId);
             runOnUiThread(() -> {
                 if (success) {
-                    Toast.makeText(this, R.string.course_saved, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.category_saved, Toast.LENGTH_SHORT).show();
                     finish();
                 } else {
-                    btnSaveCourse.setEnabled(true);
-                    Toast.makeText(this, R.string.course_save_failed, Toast.LENGTH_SHORT).show();
+                    btnSaveCategory.setEnabled(true);
+                    Toast.makeText(this, R.string.category_save_failed, Toast.LENGTH_SHORT).show();
                 }
             });
         });
@@ -110,19 +110,19 @@ public class CourseFormActivity extends AppCompatActivity {
 
     private void confirmDelete() {
         new AlertDialog.Builder(this)
-                .setTitle(R.string.delete_course)
-                .setMessage(R.string.confirm_delete_course)
-                .setPositiveButton(R.string.delete, (dialog, which) -> deleteCourse())
+                .setTitle(R.string.delete_category)
+                .setMessage(R.string.confirm_delete_category)
+                .setPositiveButton(R.string.delete, (dialog, which) -> deleteCategory())
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
-    private void deleteCourse() {
+    private void deleteCategory() {
         executorService.execute(() -> {
             boolean deleted = databaseHelper.deleteCategory(categoryId, sessionManager.getUserId());
             runOnUiThread(() -> {
                 Toast.makeText(this,
-                        deleted ? R.string.course_deleted : R.string.course_delete_failed,
+                        deleted ? R.string.category_deleted : R.string.category_delete_failed,
                         Toast.LENGTH_SHORT).show();
                 if (deleted) {
                     finish();

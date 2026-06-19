@@ -8,18 +8,18 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/course_list_title"
+        android:text="@string/category_list_title"
         android:textAppearance="@style/TextAppearance.PersonalPlanner.Headline" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="@string/course_list_subtitle"
+        android:text="@string/category_list_subtitle"
         android:textAppearance="@style/TextAppearance.PersonalPlanner.Body" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAddCourse"
+        android:id="@+id/btnAddCategory"
         style="@style/Widget.PersonalPlanner.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,7 +27,7 @@
         android:text="@string/add_course" />
 
     <TextView
-        android:id="@+id/txtEmptyCourses"
+        android:id="@+id/txtEmptyCategories"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
@@ -38,7 +38,7 @@
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerCourses"
+        android:id="@+id/recyclerCategories"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="10dp"

@@ -64,8 +64,73 @@
             android:text="@string/filter_completed" />
     </com.google.android.material.chip.ChipGroup>
 
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupTypeFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTypeAll"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/filter_all" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTypeAssignment"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/type_assignment" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTypeClass"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/type_class" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTypePartTime"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/type_part_time" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTypePersonal"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/type_personal" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTypeExam"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/type_exam" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTypeProject"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/type_project" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
     <Spinner
-        android:id="@+id/spinnerCourseFilter"
+        android:id="@+id/spinnerCategoryFilter"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_marginTop="6dp"
