@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.personalplanner.data.model.PlanCategory;
+import com.example.personalplanner.data.model.PlanRangeStats;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.data.model.StudyStatistics;
 import com.example.personalplanner.data.model.User;
@@ -210,12 +211,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public int loginUser(String username, String password) {
         try (SQLiteDatabase db = getReadableDatabase();
-             Cursor cursor = db.query(TABLE_USERS, new String[]{"user_id"},
-                     "username = ? COLLATE NOCASE AND password = ?",
-                     new String[]{username.trim(), PasswordUtils.hashPassword(password)},
+             Cursor cursor = db.query(TABLE_USERS, new String[]{"user_id", "password"},
+                     "username = ? COLLATE NOCASE",
+                     new String[]{username.trim()},
                      null, null, null, "1")) {
-            return cursor.moveToFirst()
-                    ? cursor.getInt(cursor.getColumnIndexOrThrow("user_id")) : -1;
+            if (!cursor.moveToFirst()) {
+                return -1;
+            }
+            String storedHash = cursor.getString(cursor.getColumnIndexOrThrow("password"));
+            if (!PasswordUtils.verifyPassword(password, storedHash)) {
+                return -1;
+            }
+            int userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id"));
+            if (PasswordUtils.needsRehash(storedHash)) {
+                upgradePasswordHash(userId, password);
+            }
+            return userId;
+        }
+    }
+
+    private void upgradePasswordHash(int userId, String password) {
+        ContentValues values = new ContentValues();
+        values.put("password", PasswordUtils.hashPassword(password));
+        try (SQLiteDatabase db = getWritableDatabase()) {
+            db.update(TABLE_USERS, values, "user_id = ?",
+                    new String[]{String.valueOf(userId)});
         }
     }
 
@@ -453,6 +473,59 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
         return plans;
+    }
+
+    public ArrayList<StudyPlan> getTodaySuggestions(int userId, String today, int limit) {
+        ArrayList<StudyPlan> plans = new ArrayList<>();
+        String sql = selectPlanSql() +
+                " WHERE p.user_id = ? AND p.status IN (0, 1) AND p.date = ? " +
+                "ORDER BY p.priority DESC, p.time ASC LIMIT ?";
+        try (SQLiteDatabase db = getReadableDatabase();
+             Cursor cursor = db.rawQuery(sql,
+                     new String[]{String.valueOf(userId), today, String.valueOf(limit)})) {
+            while (cursor.moveToNext()) {
+                plans.add(mapStudyPlan(cursor));
+            }
+        }
+        return plans;
+    }
+
+    public PlanRangeStats getPlanRangeStats(int userId, String startDate, String endDate,
+                                            String today) {
+        int total = 0;
+        int completed = 0;
+        int classMinutes = 0;
+        int workMinutes = 0;
+        int unsubmittedAssignments = 0;
+        int overdue = 0;
+        String sql = "SELECT COUNT(*) total, " +
+                "SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) completed, " +
+                "COALESCE(SUM(CASE WHEN plan_type = 'CLASS' AND status != 3 " +
+                "THEN duration_minutes ELSE 0 END), 0) class_minutes, " +
+                "COALESCE(SUM(CASE WHEN plan_type = 'PART_TIME' AND status != 3 " +
+                "THEN duration_minutes ELSE 0 END), 0) work_minutes, " +
+                "SUM(CASE WHEN plan_type = 'ASSIGNMENT' AND submitted = 0 " +
+                "AND status != 2 AND status != 3 THEN 1 ELSE 0 END) unsubmitted_assignments, " +
+                "SUM(CASE WHEN status IN (0, 1) AND date < ? THEN 1 ELSE 0 END) overdue " +
+                "FROM " + TABLE_PLANS + " WHERE user_id = ? AND date BETWEEN ? AND ?";
+        try (SQLiteDatabase db = getReadableDatabase();
+             Cursor cursor = db.rawQuery(sql, new String[]{
+                     today,
+                     String.valueOf(userId),
+                     startDate,
+                     endDate
+             })) {
+            if (cursor.moveToFirst()) {
+                total = cursor.getInt(0);
+                completed = cursor.getInt(1);
+                classMinutes = cursor.getInt(2);
+                workMinutes = cursor.getInt(3);
+                unsubmittedAssignments = cursor.getInt(4);
+                overdue = cursor.getInt(5);
+            }
+        }
+        return new PlanRangeStats(total, completed, classMinutes, workMinutes,
+                unsubmittedAssignments, overdue);
     }
 
     public boolean hasTimeConflict(int userId, String date, String startTime, String endTime,

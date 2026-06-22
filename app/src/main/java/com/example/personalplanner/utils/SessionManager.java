@@ -25,7 +25,9 @@ public class SessionManager {
     }
 
     public boolean isLoggedIn() {
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false);
+        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+                && getUserId() > 0
+                && !getUsername().trim().isEmpty();
     }
 
     public int getUserId() {

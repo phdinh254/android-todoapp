@@ -8,10 +8,12 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.personalplanner.R;
 import com.example.personalplanner.data.model.StudyPlan;
+import com.google.android.material.card.MaterialCardView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -89,7 +91,17 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
         holder.txtTaskTitle.setPaintFlags(plan.getStatus() == StudyPlan.STATUS_COMPLETED
                 ? flags | Paint.STRIKE_THRU_TEXT_FLAG
                 : flags & ~Paint.STRIKE_THRU_TEXT_FLAG);
-        holder.txtOverdueBadge.setVisibility(isOverdue(plan) ? View.VISIBLE : View.GONE);
+        boolean overdue = isOverdue(plan);
+        holder.txtOverdueBadge.setVisibility(overdue ? View.VISIBLE : View.GONE);
+        holder.txtTaskDateTime.setTextColor(ContextCompat.getColor(
+                holder.itemView.getContext(),
+                overdue ? R.color.error : R.color.primary
+        ));
+        holder.cardTask.setStrokeColor(ContextCompat.getColor(
+                holder.itemView.getContext(),
+                overdue ? R.color.error : R.color.outline
+        ));
+        holder.cardTask.setStrokeWidth(overdue ? 2 : 1);
         holder.itemView.setOnClickListener(v -> listener.onTaskClick(plan));
         holder.chkStatus.setOnCheckedChangeListener((button, checked) ->
                 listener.onStatusChanged(plan, checked));
@@ -116,6 +128,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
     }
 
     static class PlanViewHolder extends RecyclerView.ViewHolder {
+        final MaterialCardView cardTask;
         final TextView txtTaskTitle;
         final TextView txtTaskDescription;
         final TextView txtTaskDateTime;
@@ -126,6 +139,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.PlanViewHolder
 
         PlanViewHolder(@NonNull View itemView) {
             super(itemView);
+            cardTask = itemView.findViewById(R.id.cardTask);
             txtTaskTitle = itemView.findViewById(R.id.txtTaskTitle);
             txtTaskDescription = itemView.findViewById(R.id.txtTaskDescription);
             txtTaskDateTime = itemView.findViewById(R.id.txtTaskDateTime);

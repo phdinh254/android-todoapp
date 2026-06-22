@@ -15,6 +15,7 @@ import com.example.personalplanner.R;
 import com.example.personalplanner.activity.PlanCategoryListActivity;
 import com.example.personalplanner.activity.TaskDetailActivity;
 import com.example.personalplanner.data.local.DatabaseHelper;
+import com.example.personalplanner.data.model.PlanRangeStats;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.data.model.StudyStatistics;
 import com.example.personalplanner.utils.SessionManager;
@@ -23,10 +24,12 @@ import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.Locale;
 
 public class HomeFragment extends Fragment {
+
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
@@ -40,13 +43,18 @@ public class HomeFragment extends Fragment {
     private TextView txtAssignments;
     private TextView txtClassHours;
     private TextView txtWorkHours;
+    private TextView txtWeekStats;
+    private TextView txtMonthStats;
+    private TextView txtTodaySuggestionBadge;
+    private TextView txtEmptySuggestions;
     private TextView txtOverdue;
     private TextView txtEmptyUpcoming;
     private TextView txtInsight1;
     private TextView txtInsight2;
     private TextView txtInsight3;
 
-    private View[] planRows;
+    private View[] suggestionRows;
+    private View[] upcomingRows;
 
     @Nullable
     @Override
@@ -79,12 +87,21 @@ public class HomeFragment extends Fragment {
         txtAssignments = view.findViewById(R.id.txtAssignments);
         txtClassHours = view.findViewById(R.id.txtClassHours);
         txtWorkHours = view.findViewById(R.id.txtWorkHours);
+        txtWeekStats = view.findViewById(R.id.txtWeekStats);
+        txtMonthStats = view.findViewById(R.id.txtMonthStats);
+        txtTodaySuggestionBadge = view.findViewById(R.id.txtTodaySuggestionBadge);
+        txtEmptySuggestions = view.findViewById(R.id.txtEmptySuggestions);
         txtOverdue = view.findViewById(R.id.txtOverdue);
         txtEmptyUpcoming = view.findViewById(R.id.txtEmptyUpcoming);
         txtInsight1 = view.findViewById(R.id.txtInsight1);
         txtInsight2 = view.findViewById(R.id.txtInsight2);
         txtInsight3 = view.findViewById(R.id.txtInsight3);
-        planRows = new View[]{
+        suggestionRows = new View[]{
+                view.findViewById(R.id.rowSuggestion1),
+                view.findViewById(R.id.rowSuggestion2),
+                view.findViewById(R.id.rowSuggestion3)
+        };
+        upcomingRows = new View[]{
                 view.findViewById(R.id.rowPlan1),
                 view.findViewById(R.id.rowPlan2),
                 view.findViewById(R.id.rowPlan3)
@@ -112,7 +129,14 @@ public class HomeFragment extends Fragment {
             username = "bạn";
         }
 
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+        Calendar now = Calendar.getInstance();
+        String today = dateFormat.format(now.getTime());
+        Calendar tomorrowCalendar = (Calendar) now.clone();
+        tomorrowCalendar.add(Calendar.DAY_OF_MONTH, 1);
+        String tomorrow = dateFormat.format(tomorrowCalendar.getTime());
+        DateRange weekRange = getWeekRange(now);
+        DateRange monthRange = getMonthRange(now);
+
         StudyStatistics statistics = databaseHelper.getStudyStatistics(userId);
         ArrayList<StudyPlan> allPlans = databaseHelper.getStudyPlans(
                 userId,
@@ -120,7 +144,20 @@ public class HomeFragment extends Fragment {
                 DatabaseHelper.FILTER_ALL,
                 0
         );
-        ArrayList<StudyPlan> upcomingPlans = databaseHelper.getUpcomingPlans(userId, today, 3);
+        ArrayList<StudyPlan> todaySuggestions = databaseHelper.getTodaySuggestions(userId, today, 3);
+        ArrayList<StudyPlan> upcomingPlans = databaseHelper.getUpcomingPlans(userId, tomorrow, 3);
+        PlanRangeStats weekStats = databaseHelper.getPlanRangeStats(
+                userId,
+                weekRange.startDate,
+                weekRange.endDate,
+                today
+        );
+        PlanRangeStats monthStats = databaseHelper.getPlanRangeStats(
+                userId,
+                monthRange.startDate,
+                monthRange.endDate,
+                today
+        );
 
         int classMinutes = sumMinutesByType(allPlans, StudyPlan.TYPE_CLASS);
         int workMinutes = sumMinutesByType(allPlans, StudyPlan.TYPE_PART_TIME);
@@ -139,37 +176,53 @@ public class HomeFragment extends Fragment {
         txtAssignments.setText(String.valueOf(statistics.getAssignmentCount()));
         txtClassHours.setText(formatHours(classMinutes));
         txtWorkHours.setText(formatHours(workMinutes));
+        txtWeekStats.setText(formatRangeStats(weekStats));
+        txtMonthStats.setText(formatRangeStats(monthStats));
+        txtTodaySuggestionBadge.setText(todaySuggestions.size() + " việc hôm nay");
         txtOverdue.setText(statistics.getOverduePlans() + " quá hạn");
 
-        bindUpcomingPlans(upcomingPlans);
+        bindPlanRows(todaySuggestions, suggestionRows, txtEmptySuggestions, true);
+        bindPlanRows(upcomingPlans, upcomingRows, txtEmptyUpcoming, false);
 
-        txtInsight1.setText("• " + statistics.getClassCount() + " buổi học, "
-                + statistics.getAssignmentCount() + " bài tập và "
-                + statistics.getPartTimeCount() + " ca làm thêm đã được ghi nhận.");
-        txtInsight2.setText("• Tổng thời lượng dự kiến: "
-                + formatHours(statistics.getPlannedMinutes()) + " giờ.");
-        txtInsight3.setText("• Bạn có " + statistics.getCourseCount()
-                + " nhóm kế hoạch để phân loại học tập, công việc và cá nhân.");
+        txtInsight1.setText("- Hôm nay ưu tiên " + todaySuggestions.size()
+                + " kế hoạch, xếp theo mức quan trọng và thời gian gần nhất.");
+        txtInsight2.setText("- Tuần này còn " + weekStats.getUnsubmittedAssignments()
+                + " bài tập chưa nộp, " + weekStats.getOverduePlans()
+                + " kế hoạch quá hạn.");
+        txtInsight3.setText("- Tháng này dự kiến " + formatHours(monthStats.getClassMinutes())
+                + " giờ học và " + formatHours(monthStats.getWorkMinutes())
+                + " giờ làm thêm.");
     }
 
-    private void bindUpcomingPlans(ArrayList<StudyPlan> plans) {
-        txtEmptyUpcoming.setVisibility(plans.isEmpty() ? View.VISIBLE : View.GONE);
-        for (int i = 0; i < planRows.length; i++) {
-            View row = planRows[i];
+    private void bindPlanRows(ArrayList<StudyPlan> plans, View[] rows, TextView emptyView,
+                              boolean suggestionMode) {
+        emptyView.setVisibility(plans.isEmpty() ? View.VISIBLE : View.GONE);
+        for (int i = 0; i < rows.length; i++) {
+            View row = rows[i];
             if (i >= plans.size()) {
                 row.setVisibility(View.GONE);
                 continue;
             }
+
             StudyPlan plan = plans.get(i);
             row.setVisibility(View.VISIBLE);
             TextView title = row.findViewById(R.id.txtPlanTitle);
             TextView meta = row.findViewById(R.id.txtPlanMeta);
             TextView type = row.findViewById(R.id.txtPlanType);
             title.setText(plan.getTitle());
-            meta.setText(buildPlanMeta(plan));
-            type.setText(labelForType(plan.getPlanType()));
+            meta.setText(suggestionMode ? buildSuggestionMeta(plan) : buildPlanMeta(plan));
+            type.setText(suggestionMode ? labelForPriority(plan.getPriority()) : labelForType(plan.getPlanType()));
             row.setOnClickListener(v -> openPlanDetail(plan));
         }
+    }
+
+    private String buildSuggestionMeta(StudyPlan plan) {
+        String category = plan.getCategoryName();
+        if (category == null || category.trim().isEmpty()) {
+            category = "Chưa phân nhóm";
+        }
+        return "Hôm nay - " + plan.getTime() + " - " + labelForType(plan.getPlanType())
+                + " - " + category;
     }
 
     private String buildPlanMeta(StudyPlan plan) {
@@ -177,7 +230,7 @@ public class HomeFragment extends Fragment {
         if (category == null || category.trim().isEmpty()) {
             category = "Chưa phân nhóm";
         }
-        return plan.getDate() + " • " + plan.getTime() + " • " + category;
+        return plan.getDate() + " - " + plan.getTime() + " - " + category;
     }
 
     private int sumMinutesByType(ArrayList<StudyPlan> plans, String type) {
@@ -189,6 +242,13 @@ public class HomeFragment extends Fragment {
             }
         }
         return minutes;
+    }
+
+    private String formatRangeStats(PlanRangeStats stats) {
+        return "Giờ học: " + formatHours(stats.getClassMinutes())
+                + "\nGiờ làm: " + formatHours(stats.getWorkMinutes())
+                + "\nBT chưa nộp: " + stats.getUnsubmittedAssignments()
+                + "\nHoàn thành: " + stats.getCompletionPercent() + "%";
     }
 
     private String formatHours(int minutes) {
@@ -220,6 +280,36 @@ public class HomeFragment extends Fragment {
         return "Cá nhân";
     }
 
+    private String labelForPriority(int priority) {
+        if (priority == StudyPlan.PRIORITY_HIGH) {
+            return "Ưu tiên cao";
+        }
+        if (priority == StudyPlan.PRIORITY_LOW) {
+            return "Ưu tiên thấp";
+        }
+        return "Ưu tiên vừa";
+    }
+
+    private DateRange getWeekRange(Calendar current) {
+        Calendar start = (Calendar) current.clone();
+        int dayOfWeek = start.get(Calendar.DAY_OF_WEEK);
+        int diff = dayOfWeek == Calendar.SUNDAY ? -6 : Calendar.MONDAY - dayOfWeek;
+        start.add(Calendar.DAY_OF_MONTH, diff);
+
+        Calendar end = (Calendar) start.clone();
+        end.add(Calendar.DAY_OF_MONTH, 6);
+        return new DateRange(dateFormat.format(start.getTime()), dateFormat.format(end.getTime()));
+    }
+
+    private DateRange getMonthRange(Calendar current) {
+        Calendar start = (Calendar) current.clone();
+        start.set(Calendar.DAY_OF_MONTH, 1);
+
+        Calendar end = (Calendar) current.clone();
+        end.set(Calendar.DAY_OF_MONTH, end.getActualMaximum(Calendar.DAY_OF_MONTH));
+        return new DateRange(dateFormat.format(start.getTime()), dateFormat.format(end.getTime()));
+    }
+
     private void openPlanDetail(StudyPlan plan) {
         Intent intent = new Intent(requireContext(), TaskDetailActivity.class);
         intent.putExtra("plan_id", plan.getPlanId());
@@ -243,5 +333,15 @@ public class HomeFragment extends Fragment {
         intent.putExtra("duration", plan.getDurationMinutes());
         intent.putExtra("reminder_enabled", plan.isReminderEnabled());
         startActivity(intent);
+    }
+
+    private static class DateRange {
+        final String startDate;
+        final String endDate;
+
+        DateRange(String startDate, String endDate) {
+            this.startDate = startDate;
+            this.endDate = endDate;
+        }
     }
 }

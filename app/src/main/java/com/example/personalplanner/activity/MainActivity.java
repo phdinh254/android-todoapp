@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.personalplanner.R;
+import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.fragment.CalendarFragment;
 import com.example.personalplanner.fragment.HomeFragment;
 import com.example.personalplanner.fragment.ProfileFragment;
@@ -30,11 +31,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (!new SessionManager(this).isLoggedIn()) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
+        SessionManager sessionManager = new SessionManager(this);
+        if (!sessionManager.isLoggedIn()
+                || new DatabaseHelper(this).getUser(sessionManager.getUserId()) == null) {
+            sessionManager.logout();
+            openLoginScreen();
             return;
         }
 
@@ -56,6 +57,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setupBottomNavigation();
+    }
+
+    private void openLoginScreen() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void requestNotificationPermission() {
