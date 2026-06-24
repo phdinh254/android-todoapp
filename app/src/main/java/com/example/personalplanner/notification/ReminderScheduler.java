@@ -1,5 +1,6 @@
 package com.example.personalplanner.notification;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -131,6 +132,7 @@ public final class ReminderScheduler {
                 || alarmManager.canScheduleExactAlarms();
     }
 
+    @SuppressLint("InlinedApi")
     public static Intent createExactAlarmPermissionIntent(Context context) {
         Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
         intent.setData(Uri.parse("package:" + context.getPackageName()));
@@ -171,19 +173,11 @@ public final class ReminderScheduler {
                 type,
                 triggerAt
         );
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAt,
-                    alarmIntent
-            );
-        } else {
-            alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAt,
-                    alarmIntent
-            );
-        }
+        alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAt,
+                alarmIntent
+        );
         return true;
     }
 

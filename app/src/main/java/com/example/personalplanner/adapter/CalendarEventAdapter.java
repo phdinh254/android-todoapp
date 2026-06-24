@@ -28,11 +28,17 @@ public class CalendarEventAdapter extends RecyclerView.Adapter<CalendarEventAdap
     }
 
     public void setData(ArrayList<StudyPlan> newPlans) {
+        int oldSize = plans.size();
         plans.clear();
+        if (oldSize > 0) {
+            notifyItemRangeRemoved(0, oldSize);
+        }
         if (newPlans != null) {
             plans.addAll(newPlans);
+            if (!newPlans.isEmpty()) {
+                notifyItemRangeInserted(0, newPlans.size());
+            }
         }
-        notifyDataSetChanged();
     }
 
     @NonNull

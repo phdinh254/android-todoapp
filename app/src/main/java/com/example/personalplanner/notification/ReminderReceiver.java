@@ -15,7 +15,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.example.personalplanner.R;
-import com.example.personalplanner.activity.MainActivity;
+import com.example.personalplanner.activity.PlanDetailMockupActivity;
 import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.data.model.StudyPlan;
 
@@ -65,8 +65,9 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         String title = plan.getTitle();
         String course = plan.getCategoryName();
-        Intent openAppIntent = new Intent(context, MainActivity.class);
+        Intent openAppIntent = new Intent(context, PlanDetailMockupActivity.class);
         openAppIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        openAppIntent.putExtra("plan_id", plan.getPlanId());
         PendingIntent contentIntent = PendingIntent.getActivity(
                 context,
                 planId,

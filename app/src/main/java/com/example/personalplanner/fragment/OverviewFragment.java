@@ -17,14 +17,19 @@ import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.data.model.PlanRangeStats;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.data.model.StudyStatistics;
+import com.example.personalplanner.utils.PlanBusinessRules;
 import com.example.personalplanner.utils.SessionManager;
+import com.example.personalplanner.utils.WeeklyPlanChartView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -47,6 +52,7 @@ public class OverviewFragment extends Fragment {
     private TextView txtPriorityLow;
     private TextView txtDueSoon;
     private TextView txtTodayPlan;
+    private WeeklyPlanChartView chartWeeklyPlans;
     private CircularProgressIndicator progressOverviewCompletion;
     private LinearProgressIndicator progressPriorityHigh;
     private LinearProgressIndicator progressPriorityMedium;
@@ -85,6 +91,7 @@ public class OverviewFragment extends Fragment {
         txtPriorityLow = view.findViewById(R.id.txtPriorityLow);
         txtDueSoon = view.findViewById(R.id.txtDueSoon);
         txtTodayPlan = view.findViewById(R.id.txtTodayPlan);
+        chartWeeklyPlans = view.findViewById(R.id.chartWeeklyPlans);
         progressOverviewCompletion = view.findViewById(R.id.progressOverviewCompletion);
         progressPriorityHigh = view.findViewById(R.id.progressPriorityHigh);
         progressPriorityMedium = view.findViewById(R.id.progressPriorityMedium);
@@ -102,23 +109,27 @@ public class OverviewFragment extends Fragment {
                     userId, weekRange.startDate, weekRange.endDate, today);
             ArrayList<StudyPlan> plans = databaseHelper.getStudyPlans(
                     userId, "", DatabaseHelper.FILTER_ALL, 0);
+            ArrayList<StudyPlan> weekPlans = databaseHelper.getStudyPlansBetween(
+                    userId, weekRange.startDate, weekRange.endDate);
             ArrayList<StudyPlan> dueSoon = databaseHelper.getUpcomingPlans(userId, today, 1);
             ArrayList<StudyPlan> todayPlans = databaseHelper.getTodaySuggestions(userId, today, 1);
 
             int high = countPriority(plans, StudyPlan.PRIORITY_HIGH);
             int medium = countPriority(plans, StudyPlan.PRIORITY_MEDIUM);
             int low = countPriority(plans, StudyPlan.PRIORITY_LOW);
+            int[][] weeklyChartData = buildWeeklyChartData(weekPlans, weekRange.startDate);
 
             mainHandler.post(() -> {
                 if (!isAdded() || getView() == null) return;
-                render(stats, weekStats, high, medium, low, dueSoon, todayPlans);
+                render(stats, weekStats, high, medium, low, dueSoon, todayPlans,
+                        weeklyChartData);
             });
         });
     }
 
     private void render(StudyStatistics stats, PlanRangeStats weekStats, int high, int medium,
                         int low, ArrayList<StudyPlan> dueSoon,
-                        ArrayList<StudyPlan> todayPlans) {
+                        ArrayList<StudyPlan> todayPlans, int[][] weeklyChartData) {
         int total = Math.max(stats.getTotalPlans(), 0);
         int percent = stats.getCompletionPercent();
         txtOverviewTotal.setText(String.valueOf(total));
@@ -131,10 +142,11 @@ public class OverviewFragment extends Fragment {
                 + formatHours(weekStats.getClassMinutes()) + " gio hoc, "
                 + formatHours(weekStats.getWorkMinutes()) + " gio lam them.");
         progressOverviewCompletion.setProgressCompat(percent, true);
+        chartWeeklyPlans.setData(weeklyChartData[0], weeklyChartData[1], weeklyChartData[2]);
 
-        txtPriorityHigh.setText("Cao                                      " + high + " ke hoach");
-        txtPriorityMedium.setText("Trung binh                         " + medium + " ke hoach");
-        txtPriorityLow.setText("Thap                                    " + low + " ke hoach");
+        txtPriorityHigh.setText(String.format(Locale.US, "Cao: %d ke hoach", high));
+        txtPriorityMedium.setText(String.format(Locale.US, "Trung binh: %d ke hoach", medium));
+        txtPriorityLow.setText(String.format(Locale.US, "Thap: %d ke hoach", low));
         progressPriorityHigh.setProgressCompat(percentOf(high, total), true);
         progressPriorityMedium.setProgressCompat(percentOf(medium, total), true);
         progressPriorityLow.setProgressCompat(percentOf(low, total), true);
@@ -161,6 +173,44 @@ public class OverviewFragment extends Fragment {
 
     private int percentOf(int value, int total) {
         return total <= 0 ? 0 : Math.round(value * 100f / total);
+    }
+
+    private int[][] buildWeeklyChartData(ArrayList<StudyPlan> weekPlans, String startDate) {
+        int[][] chartData = new int[3][7];
+        Map<String, Integer> dayIndex = buildDayIndex(startDate);
+        long nowMillis = System.currentTimeMillis();
+        for (StudyPlan plan : weekPlans) {
+            if (plan.getStatus() == StudyPlan.STATUS_CANCELLED) {
+                continue;
+            }
+            Integer index = dayIndex.get(plan.getDate());
+            if (index == null || index < 0 || index >= 7) {
+                continue;
+            }
+            chartData[0][index]++;
+            if (plan.getStatus() == StudyPlan.STATUS_COMPLETED) {
+                chartData[1][index]++;
+            } else if (PlanBusinessRules.isOverdue(plan, nowMillis)) {
+                chartData[2][index]++;
+            }
+        }
+        return chartData;
+    }
+
+    private Map<String, Integer> buildDayIndex(String startDate) {
+        Map<String, Integer> result = new HashMap<>();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        Calendar cursor = Calendar.getInstance();
+        try {
+            cursor.setTime(formatter.parse(startDate));
+        } catch (ParseException | NullPointerException ignored) {
+            return result;
+        }
+        for (int i = 0; i < 7; i++) {
+            result.put(formatter.format(cursor.getTime()), i);
+            cursor.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return result;
     }
 
     private String formatHours(int minutes) {

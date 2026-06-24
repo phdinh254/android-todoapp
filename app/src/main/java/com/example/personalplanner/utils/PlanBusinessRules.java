@@ -43,18 +43,18 @@ public final class PlanBusinessRules {
 
     public static String getDisplayStatusLabel(String displayStatus) {
         if (DISPLAY_COMPLETED.equals(displayStatus)) {
-            return "Hoan thanh";
+            return "Hoàn thành";
         }
         if (DISPLAY_OVERDUE.equals(displayStatus)) {
-            return "Qua han";
+            return "Quá hạn";
         }
         if (DISPLAY_IN_PROGRESS.equals(displayStatus)) {
-            return "Dang thuc hien";
+            return "Đang thực hiện";
         }
         if (DISPLAY_CANCELLED.equals(displayStatus)) {
-            return "Da huy";
+            return "Đã hủy";
         }
-        return "Chua bat dau";
+        return "Chưa bắt đầu";
     }
 
     public static boolean isOverdue(StudyPlan plan, long nowMillis) {

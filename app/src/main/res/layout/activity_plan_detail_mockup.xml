@@ -16,54 +16,10 @@
         android:paddingEnd="20dp"
         android:paddingBottom="28dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBack"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:minWidth="0dp"
-                android:text="&#8592;"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEdit"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:minWidth="0dp"
-                android:text="&#9998;"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDelete"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:minWidth="0dp"
-                android:text="&#128465;"
-                android:textAllCaps="false"
-                android:textColor="@color/danger" />
-        </LinearLayout>
-
         <TextView
             android:id="@+id/txtStatus"
             android:layout_width="wrap_content"
             android:layout_height="30dp"
-            android:layout_marginTop="12dp"
             android:background="@drawable/bg_warning_pill"
             android:gravity="center"
             android:paddingStart="12dp"
@@ -132,7 +88,7 @@
                     android:layout_width="0dp"
                     android:layout_height="8dp"
                     android:layout_weight="1"
-                    android:progress="68"
+                    android:progress="0"
                     app:indicatorColor="@color/primary"
                     app:trackColor="@color/outline"
                     app:trackCornerRadius="4dp"
@@ -191,6 +147,67 @@
             android:padding="16dp"
             android:textColor="@color/text_primary"
             android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/layoutSubTasksSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="C&#244;ng vi&#7879;c nh&#7887;"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/layoutSubTasks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_soft_field"
+                android:orientation="vertical"
+                android:padding="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddSubTask"
+                style="@style/Widget.PersonalPlanner.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:text="@string/add_sub_task" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutEvaluationSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="&#272;&#225;nh gi&#225; sau ho&#224;n th&#224;nh"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtEvaluation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_soft_field"
+                android:lineSpacingExtra="3dp"
+                android:minHeight="72dp"
+                android:padding="16dp"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnComplete"

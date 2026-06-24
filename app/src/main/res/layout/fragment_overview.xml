@@ -162,7 +162,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="Ti&#7871;n &#273;&#7897; ho&#224;n th&#224;nh"
+            android:text="Bi&#7875;u &#273;&#7891; tu&#7847;n n&#224;y"
             android:textAppearance="@style/TextAppearance.PersonalPlanner.Title" />
 
         <com.google.android.material.card.MaterialCardView
@@ -177,37 +177,55 @@
                 android:orientation="vertical"
                 android:padding="18dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="132dp"
-                    android:baselineAligned="false"
-                    android:gravity="bottom"
-                    android:orientation="horizontal"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp">
-
-                    <View android:layout_width="0dp" android:layout_height="46dp" android:layout_margin="7dp" android:layout_weight="1" android:background="@color/teal" />
-                    <View android:layout_width="0dp" android:layout_height="82dp" android:layout_margin="7dp" android:layout_weight="1" android:background="@color/teal" />
-                    <View android:layout_width="0dp" android:layout_height="60dp" android:layout_margin="7dp" android:layout_weight="1" android:background="@color/teal" />
-                    <View android:layout_width="0dp" android:layout_height="112dp" android:layout_margin="7dp" android:layout_weight="1" android:background="@color/teal" />
-                    <View android:layout_width="0dp" android:layout_height="88dp" android:layout_margin="7dp" android:layout_weight="1" android:background="@color/teal" />
-                    <View android:layout_width="0dp" android:layout_height="14dp" android:layout_margin="7dp" android:layout_weight="1" android:background="@color/outline" />
-                    <View android:layout_width="0dp" android:layout_height="48dp" android:layout_margin="7dp" android:layout_weight="1" android:background="@color/teal" />
-                </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:text="Theo d&#245;i t&#7893;ng k&#7871; ho&#7841;ch, vi&#7879;c ho&#224;n th&#224;nh v&#224; qu&#225; h&#7841;n theo t&#7915;ng ng&#224;y."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingBottom="2dp">
 
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T2" android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T3" android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T4" android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T5" android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T6" android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T7" android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="CN" android:textColor="@color/text_secondary" android:textSize="11sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="&#9679; &#272;ang l&#224;m"
+                        android:textColor="@color/primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:text="&#9679; Ho&#224;n th&#224;nh"
+                        android:textColor="@color/success"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:text="&#9679; Qu&#225; h&#7841;n"
+                        android:textColor="@color/danger"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
+
+                <com.example.personalplanner.utils.WeeklyPlanChartView
+                    android:id="@+id/chartWeeklyPlans"
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:layout_marginTop="6dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="2dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

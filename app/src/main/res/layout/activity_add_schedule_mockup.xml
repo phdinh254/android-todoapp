@@ -22,16 +22,9 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCancel"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+            <Space
                 android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:minWidth="0dp"
-                android:text="&#215;"
-                android:textAllCaps="false"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp" />
+                android:layout_height="44dp" />
 
             <TextView
                 android:layout_width="0dp"
@@ -43,21 +36,9 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaveTop"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="64dp"
-                android:layout_height="44dp"
-                android:gravity="center"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:text="L&#432;u"
-                android:textAllCaps="false"
-                android:textColor="@color/primary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+            <Space
+                android:layout_width="44dp"
+                android:layout_height="44dp" />
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -219,8 +200,7 @@
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:layout_marginTop="18dp"
-            android:text="@string/save_study_plan"
-            android:visibility="gone" />
+            android:text="@string/save_schedule" />
 
         <Spinner
             android:id="@+id/spinnerPlanType"
@@ -242,7 +222,19 @@
             app:singleSelection="true">
 
             <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriorityLow"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriorityMedium"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPriorityHigh"
                 style="@style/Widget.MaterialComponents.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />

@@ -81,6 +81,7 @@ public class TaskDetailActivity extends AppCompatActivity {
     private String selectedType;
     private String selectedRepeatRule;
     private int selectedReminderMinutes;
+    private boolean pendingUpdateAfterNotificationPermission;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -274,6 +275,7 @@ public class TaskDetailActivity extends AppCompatActivity {
         if (databaseHelper.hasTimeConflict(sessionManager.getUserId(), selectedDate,
                 selectedTime, selectedEndTime, planId)) {
             Toast.makeText(this, R.string.schedule_conflict_warning, Toast.LENGTH_SHORT).show();
+            return;
         }
         setWorking(true);
         executorService.execute(() -> {
@@ -415,10 +417,31 @@ public class TaskDetailActivity extends AppCompatActivity {
                 new String[]{Manifest.permission.POST_NOTIFICATIONS},
                 REQUEST_POST_NOTIFICATIONS
         );
+        pendingUpdateAfterNotificationPermission = true;
         Toast.makeText(this,
-                "Hay cap quyen thong bao roi cap nhat lai de kich hoat nhac lich.",
+                "Hay cap quyen thong bao de tiep tuc cap nhat nhac lich.",
                 Toast.LENGTH_LONG).show();
         return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != REQUEST_POST_NOTIFICATIONS
+                || !pendingUpdateAfterNotificationPermission) {
+            return;
+        }
+        pendingUpdateAfterNotificationPermission = false;
+        boolean granted = grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if (!granted) {
+            switchReminder.setChecked(false);
+            Toast.makeText(this,
+                    "Khong co quyen thong bao, ke hoach se duoc luu khong kem nhac lich.",
+                    Toast.LENGTH_LONG).show();
+        }
+        updatePlan();
     }
 
     private boolean ensureExactAlarmPermission() {

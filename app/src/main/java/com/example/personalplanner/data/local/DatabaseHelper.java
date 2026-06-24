@@ -758,6 +758,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("is_enabled", 0);
         values.put("updated_at", nowString());
         try (SQLiteDatabase db = getWritableDatabase()) {
+            ContentValues planValues = new ContentValues();
+            planValues.put("reminder_enabled", 0);
+            planValues.put("updated_at", nowString());
+            db.update(TABLE_PLANS, planValues, "task_id = ?",
+                    new String[]{String.valueOf(planId)});
             return db.update(TABLE_REMINDERS, values, "plan_id = ?",
                     new String[]{String.valueOf(planId)}) > 0;
         }

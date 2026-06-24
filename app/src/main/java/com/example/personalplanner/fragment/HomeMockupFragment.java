@@ -30,6 +30,7 @@ public class HomeMockupFragment extends Fragment {
     private DatabaseHelper databaseHelper;
     private SessionManager sessionManager;
     private TextView txtUserName;
+    private TextView txtGreetingSummary;
     private TextView txtTotalPlans;
     private TextView txtInProgress;
     private TextView txtCompleted;
@@ -60,6 +61,7 @@ public class HomeMockupFragment extends Fragment {
 
     private void bindViews(View view) {
         txtUserName = view.findViewById(R.id.txtUserName);
+        txtGreetingSummary = view.findViewById(R.id.txtGreetingSummary);
         txtTotalPlans = view.findViewById(R.id.txtTotalPlans);
         txtInProgress = view.findViewById(R.id.txtInProgress);
         txtCompleted = view.findViewById(R.id.txtCompleted);
@@ -86,7 +88,7 @@ public class HomeMockupFragment extends Fragment {
         if (username == null || username.trim().isEmpty()) {
             username = "An Nguy\u1ec5n";
         }
-        txtUserName.setText(username);
+        txtUserName.setText("Xin ch\u00e0o " + username + "!");
 
         String today = dateFormat.format(Calendar.getInstance().getTime());
         StudyStatistics statistics = databaseHelper.getStudyStatistics(userId);
@@ -99,6 +101,7 @@ public class HomeMockupFragment extends Fragment {
         txtInProgress.setText(String.valueOf(statistics.getPendingPlans()));
         txtCompleted.setText(String.valueOf(statistics.getCompletedPlans()));
         txtOverdue.setText(String.valueOf(statistics.getOverduePlans()));
+        txtGreetingSummary.setText("H\u00e3y l\u00ean k\u1ebf ho\u1ea1ch cho m\u00ecnh ngay");
         bindPlanRows(plans);
     }
 

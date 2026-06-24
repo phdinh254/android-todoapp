@@ -58,7 +58,6 @@ public class AddTaskActivity extends AppCompatActivity {
     private Button btnChooseTime;
     private Button btnChooseEndTime;
     private Button btnSaveTask;
-    private TextView btnSaveTop;
     private Spinner spinnerCategory;
     private Spinner spinnerPlanType;
     private Spinner spinnerPriority;
@@ -84,6 +83,7 @@ public class AddTaskActivity extends AppCompatActivity {
     private String selectedDate;
     private String selectedTime;
     private String selectedEndTime;
+    private boolean pendingSaveAfterNotificationPermission;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +102,6 @@ public class AddTaskActivity extends AppCompatActivity {
         btnChooseTime = findViewById(R.id.btnChooseTime);
         btnChooseEndTime = findViewById(R.id.btnChooseEndTime);
         btnSaveTask = findViewById(R.id.btnSaveTask);
-        btnSaveTop = findViewById(R.id.btnSaveTop);
         spinnerCategory = findViewById(R.id.spinnerCategory);
         spinnerPlanType = findViewById(R.id.spinnerPlanType);
         spinnerPriority = findViewById(R.id.spinnerPriority);
@@ -119,7 +118,6 @@ public class AddTaskActivity extends AppCompatActivity {
         layoutSubject = findViewById(R.id.layoutSubject);
         layoutWage = findViewById(R.id.layoutWage);
         Button btnManageCategories = findViewById(R.id.btnManageCategories);
-        Button btnCancel = findViewById(R.id.btnCancel);
         databaseHelper = new DatabaseHelper(this);
         sessionManager = new SessionManager(this);
         prepareDefaultCategory();
@@ -161,7 +159,6 @@ public class AddTaskActivity extends AppCompatActivity {
         btnChooseTime.setOnClickListener(v -> showTimePicker(calendar, true));
         btnChooseEndTime.setOnClickListener(v -> showTimePicker(endCalendar, false));
         btnSaveTask.setOnClickListener(v -> savePlan());
-        btnSaveTop.setOnClickListener(v -> savePlan());
         if (switchAllDay != null) {
             switchAllDay.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
@@ -186,7 +183,6 @@ public class AddTaskActivity extends AppCompatActivity {
         }
         btnManageCategories.setOnClickListener(v ->
                 startActivity(new Intent(this, PlanCategoryListActivity.class)));
-        btnCancel.setOnClickListener(v -> finish());
     }
 
     @Override
@@ -297,10 +293,30 @@ public class AddTaskActivity extends AppCompatActivity {
                 new String[]{Manifest.permission.POST_NOTIFICATIONS},
                 REQUEST_POST_NOTIFICATIONS
         );
+        pendingSaveAfterNotificationPermission = true;
         Toast.makeText(this,
-                "Hay cap quyen thong bao roi bam Luu lai de kich hoat nhac lich.",
+                "Hay cap quyen thong bao de tiep tuc luu nhac lich.",
                 Toast.LENGTH_LONG).show();
         return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != REQUEST_POST_NOTIFICATIONS || !pendingSaveAfterNotificationPermission) {
+            return;
+        }
+        pendingSaveAfterNotificationPermission = false;
+        boolean granted = grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if (!granted) {
+            switchReminder.setChecked(false);
+            Toast.makeText(this,
+                    "Khong co quyen thong bao, ke hoach se duoc luu khong kem nhac lich.",
+                    Toast.LENGTH_LONG).show();
+        }
+        savePlan();
     }
 
     private boolean ensureExactAlarmPermission() {
@@ -638,9 +654,7 @@ public class AddTaskActivity extends AppCompatActivity {
 
     private void setSaving(boolean saving) {
         btnSaveTask.setEnabled(!saving);
-        btnSaveTask.setText(saving ? R.string.saving : R.string.save_study_plan);
-        btnSaveTop.setEnabled(!saving);
-        btnSaveTop.setText(saving ? getString(R.string.saving) : "L\u01b0u");
+        btnSaveTask.setText(saving ? R.string.saving : R.string.save_schedule);
     }
 
     private void updateTypeFields() {
