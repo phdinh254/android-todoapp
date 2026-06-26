@@ -1,14 +1,13 @@
 package com.example.personalplanner.notification;
 
 public enum ReminderType {
+    NONE(-9999, false),
     ON_TIME(0, false),
-    AFTER_1_MIN(1, false),
-    AFTER_3_MIN(3, false),
-    AFTER_5_MIN(5, false),
-    AFTER_10_MIN(10, false),
-    AFTER_20_MIN(20, false),
-    AFTER_30_MIN(30, false),
-    AFTER_1_HOUR(60, false),
+    BEFORE_1_MIN(-1, false),
+    BEFORE_5_MIN(-5, false),
+    BEFORE_10_MIN(-10, false),
+    BEFORE_20_MIN(-20, false),
+    BEFORE_30_MIN(-30, false),
     EVERY_24_HOURS(-1440, true);
 
     private final int storedValue;
@@ -28,7 +27,7 @@ public enum ReminderType {
     }
 
     public long getOffsetMillis() {
-        return Math.abs((long) storedValue) * 60_000L;
+        return (long) storedValue * 60_000L;
     }
 
     public static ReminderType fromStoredValue(int storedValue) {
@@ -37,6 +36,11 @@ public enum ReminderType {
                 return type;
             }
         }
+        if (storedValue == 1) return BEFORE_1_MIN;
+        if (storedValue == 5) return BEFORE_5_MIN;
+        if (storedValue == 10) return BEFORE_10_MIN;
+        if (storedValue == 20) return BEFORE_20_MIN;
+        if (storedValue == 30) return BEFORE_30_MIN;
         return ON_TIME;
     }
 }

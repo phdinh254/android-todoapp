@@ -43,8 +43,8 @@ import java.util.concurrent.Executors;
 
 public class AddTaskActivity extends AppCompatActivity {
     private static final int REQUEST_POST_NOTIFICATIONS = 2001;
-    private static final int REMINDER_ON_TIME_POSITION = 0;
-    private static final int REMINDER_EVERY_24_HOURS_POSITION = 6;
+    private static final int REMINDER_NONE_POSITION = 0;
+    private static final int REMINDER_ON_TIME_POSITION = 1;
 
     private EditText edtTitle;
     private EditText edtDescription;
@@ -167,16 +167,9 @@ public class AddTaskActivity extends AppCompatActivity {
                     selectedEndTime = "23:59";
                     btnChooseTime.setVisibility(View.GONE);
                     btnChooseEndTime.setEnabled(false);
-                    spinnerReminderLead.setSelection(REMINDER_EVERY_24_HOURS_POSITION);
-                    spinnerReminderLead.setEnabled(false);
                 } else {
                     btnChooseTime.setVisibility(View.VISIBLE);
                     btnChooseEndTime.setEnabled(true);
-                    spinnerReminderLead.setEnabled(true);
-                    if (spinnerReminderLead.getSelectedItemPosition()
-                            == REMINDER_EVERY_24_HOURS_POSITION) {
-                        spinnerReminderLead.setSelection(REMINDER_ON_TIME_POSITION);
-                    }
                 }
                 updateDateTimeLabels();
             });
@@ -344,6 +337,9 @@ public class AddTaskActivity extends AppCompatActivity {
             return false;
         }
         ReminderType reminderType = ReminderType.fromStoredValue(reminderValue);
+        if (reminderType == ReminderType.NONE) {
+            return true;
+        }
         try {
             long selectedDateMillis = ReminderScheduler.parseSelectedDateMillis(selectedDate);
             Integer selectedTimeMinutes = null;
@@ -432,7 +428,8 @@ public class AddTaskActivity extends AppCompatActivity {
         String repeatRule = valueFromArray(R.array.repeat_rule_values, spinnerRepeatRule.getSelectedItemPosition());
         int reminderMinutes = Integer.parseInt(valueFromArray(
                 R.array.reminder_lead_values, spinnerReminderLead.getSelectedItemPosition()));
-        boolean reminderEnabled = switchReminder.isChecked();
+        boolean reminderEnabled = switchReminder.isChecked()
+                && ReminderType.fromStoredValue(reminderMinutes) != ReminderType.NONE;
         if (reminderEnabled) {
             if (!validateReminderSettings(reminderMinutes)
                     || !ensureNotificationPermission()

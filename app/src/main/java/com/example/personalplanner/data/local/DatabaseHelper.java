@@ -23,7 +23,7 @@ import java.util.Locale;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "personal_planner.db";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     public static final int FILTER_ALL = -1;
     public static final int STATUS_UPCOMING = StudyPlan.STATUS_UPCOMING;
@@ -80,7 +80,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void createPlansTable(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE " + TABLE_PLANS + " (" +
+        createPlansTable(db, TABLE_PLANS);
+    }
+
+    private void createPlansTable(SQLiteDatabase db, String tableName) {
+        db.execSQL("CREATE TABLE " + tableName + " (" +
                 "task_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "title TEXT NOT NULL, " +
                 "description TEXT, " +
@@ -88,6 +92,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "time TEXT NOT NULL, " +
                 "end_time TEXT, " +
                 "status INTEGER NOT NULL DEFAULT 0 CHECK(status BETWEEN 0 AND 3), " +
+                "progress INTEGER NOT NULL DEFAULT 0, " +
+                "completed_at TEXT, " +
                 "category_id INTEGER DEFAULT 0, " +
                 "plan_type TEXT NOT NULL DEFAULT 'PERSONAL', " +
                 "priority INTEGER NOT NULL DEFAULT 1 CHECK(priority BETWEEN 0 AND 2), " +
@@ -203,7 +209,125 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             createRepeatRulesTable(db);
             createPlanEvaluationsTable(db);
         }
+        if (oldVersion < 6) {
+            rebuildPlansTableForStatusValues(db);
+        }
         createIndexes(db);
+    }
+
+    private void rebuildPlansTableForStatusValues(SQLiteDatabase db) {
+        if (!tableExists(db, TABLE_PLANS)) {
+            createPlansTable(db);
+            return;
+        }
+        String subTasksBackup = TABLE_SUB_TASKS + "_backup_v6";
+        String remindersBackup = TABLE_REMINDERS + "_backup_v6";
+        String repeatRulesBackup = TABLE_REPEAT_RULES + "_backup_v6";
+        String evaluationsBackup = TABLE_PLAN_EVALUATIONS + "_backup_v6";
+        backupTableIfExists(db, TABLE_SUB_TASKS, subTasksBackup);
+        backupTableIfExists(db, TABLE_REMINDERS, remindersBackup);
+        backupTableIfExists(db, TABLE_REPEAT_RULES, repeatRulesBackup);
+        backupTableIfExists(db, TABLE_PLAN_EVALUATIONS, evaluationsBackup);
+
+        String newTable = TABLE_PLANS + "_new_v6";
+        db.execSQL("DROP TABLE IF EXISTS " + newTable);
+        createPlansTable(db, newTable);
+
+        String[] planColumns = {
+                "task_id", "title", "description", "date", "time", "end_time",
+                "status", "progress", "completed_at", "category_id", "plan_type",
+                "priority", "duration_minutes", "reminder_enabled", "reminder_minutes",
+                "location", "room", "subject", "repeat_rule", "repeat_until",
+                "wage", "submitted", "start_time", "deadline", "created_at",
+                "updated_at", "user_id"
+        };
+        ArrayList<String> commonColumns = new ArrayList<>();
+        for (String column : planColumns) {
+            if (columnExists(db, TABLE_PLANS, column) && columnExists(db, newTable, column)) {
+                commonColumns.add(column);
+            }
+        }
+        if (!commonColumns.isEmpty()) {
+            String columns = joinColumns(commonColumns);
+            db.execSQL("INSERT INTO " + newTable + " (" + columns + ") " +
+                    "SELECT " + columns + " FROM " + TABLE_PLANS);
+        }
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SUB_TASKS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_REMINDERS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_REPEAT_RULES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PLAN_EVALUATIONS);
+        db.execSQL("DROP TABLE " + TABLE_PLANS);
+        db.execSQL("ALTER TABLE " + newTable + " RENAME TO " + TABLE_PLANS);
+        createSubTasksTable(db);
+        createRemindersTable(db);
+        createRepeatRulesTable(db);
+        createPlanEvaluationsTable(db);
+        restoreTableFromBackup(db, TABLE_SUB_TASKS, subTasksBackup, new String[]{
+                "sub_task_id", "plan_id", "title", "is_completed", "created_at", "updated_at"
+        });
+        restoreTableFromBackup(db, TABLE_REMINDERS, remindersBackup, new String[]{
+                "reminder_id", "plan_id", "reminder_time", "is_enabled", "created_at", "updated_at"
+        });
+        restoreTableFromBackup(db, TABLE_REPEAT_RULES, repeatRulesBackup, new String[]{
+                "repeat_rule_id", "plan_id", "repeat_type", "week_days", "month_day",
+                "is_active", "created_at", "updated_at"
+        });
+        restoreTableFromBackup(db, TABLE_PLAN_EVALUATIONS, evaluationsBackup, new String[]{
+                "evaluation_id", "plan_id", "satisfaction_level", "result_note", "delay_reason",
+                "completed_at", "created_at", "updated_at"
+        });
+        db.execSQL("DROP TABLE IF EXISTS " + subTasksBackup);
+        db.execSQL("DROP TABLE IF EXISTS " + remindersBackup);
+        db.execSQL("DROP TABLE IF EXISTS " + repeatRulesBackup);
+        db.execSQL("DROP TABLE IF EXISTS " + evaluationsBackup);
+        addColumnIfMissing(db, TABLE_PLANS, "progress", "INTEGER NOT NULL DEFAULT 0");
+        addColumnIfMissing(db, TABLE_PLANS, "completed_at", "TEXT");
+        db.execSQL("UPDATE " + TABLE_PLANS +
+                " SET start_time = date || ' ' || time " +
+                "WHERE start_time IS NULL OR start_time = ''");
+        db.execSQL("UPDATE " + TABLE_PLANS +
+                " SET deadline = date || ' ' || COALESCE(NULLIF(end_time, ''), time) " +
+                "WHERE deadline IS NULL OR deadline = ''");
+        db.execSQL("UPDATE " + TABLE_PLANS +
+                " SET progress = CASE status WHEN 2 THEN 100 WHEN 1 THEN 50 ELSE 0 END " +
+                "WHERE progress IS NULL OR progress < 0 OR progress > 100");
+    }
+
+    private void backupTableIfExists(SQLiteDatabase db, String tableName, String backupName) {
+        db.execSQL("DROP TABLE IF EXISTS " + backupName);
+        if (tableExists(db, tableName)) {
+            db.execSQL("CREATE TABLE " + backupName + " AS SELECT * FROM " + tableName);
+        }
+    }
+
+    private void restoreTableFromBackup(SQLiteDatabase db, String tableName, String backupName,
+                                        String[] columns) {
+        if (!tableExists(db, backupName)) {
+            return;
+        }
+        ArrayList<String> commonColumns = new ArrayList<>();
+        for (String column : columns) {
+            if (columnExists(db, tableName, column) && columnExists(db, backupName, column)) {
+                commonColumns.add(column);
+            }
+        }
+        if (commonColumns.isEmpty()) {
+            return;
+        }
+        String joinedColumns = joinColumns(commonColumns);
+        db.execSQL("INSERT OR REPLACE INTO " + tableName + " (" + joinedColumns + ") " +
+                "SELECT " + joinedColumns + " FROM " + backupName);
+    }
+
+    private String joinColumns(ArrayList<String> columns) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < columns.size(); i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(columns.get(i));
+        }
+        return builder.toString();
     }
 
     private void createLegacyCoursesTable(SQLiteDatabase db) {
@@ -424,6 +548,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 planType, priority, durationMinutes, reminderEnabled, reminderMinutes,
                 location, room, subject, repeatRule, repeatUntil, wage, submitted);
         values.put("status", STATUS_UPCOMING);
+        values.put("progress", 0);
+        values.putNull("completed_at");
         values.put("user_id", userId);
         values.put("created_at", nowString());
         try (SQLiteDatabase db = getWritableDatabase()) {
@@ -442,9 +568,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 planType, priority, durationMinutes, reminderEnabled, reminderMinutes,
                 location, room, subject, repeatRule, repeatUntil, wage, submitted);
         values.put("status", status);
+        values.put("progress", progressForStatus(status));
+        if (status == STATUS_COMPLETED || status == STATUS_CANCELLED) {
+            values.put("reminder_enabled", 0);
+        }
+        if (status == STATUS_COMPLETED) {
+            values.put("completed_at", nowString());
+        } else {
+            values.putNull("completed_at");
+        }
         try (SQLiteDatabase db = getWritableDatabase()) {
-            return db.update(TABLE_PLANS, values, "task_id = ? AND user_id = ?",
+            boolean updated = db.update(TABLE_PLANS, values, "task_id = ? AND user_id = ?",
                     new String[]{String.valueOf(planId), String.valueOf(userId)}) > 0;
+            if (updated && (status == STATUS_COMPLETED || status == STATUS_CANCELLED)) {
+                ContentValues reminderValues = new ContentValues();
+                reminderValues.put("is_enabled", 0);
+                reminderValues.put("updated_at", nowString());
+                db.update(TABLE_REMINDERS, reminderValues, "plan_id = ?",
+                        new String[]{String.valueOf(planId)});
+            }
+            return updated;
         }
     }
 
@@ -482,6 +625,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private String nowString() {
         return String.valueOf(System.currentTimeMillis());
+    }
+
+    private int progressForStatus(int status) {
+        if (status == STATUS_COMPLETED) {
+            return 100;
+        }
+        if (status == STATUS_IN_PROGRESS) {
+            return 50;
+        }
+        return 0;
     }
 
     private String combineDateTime(String date, String time) {
@@ -605,7 +758,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ArrayList<StudyPlan> plans = new ArrayList<>();
         String sql = selectPlanSql() +
                 " WHERE p.user_id = ? AND p.status IN (0, 1) AND p.date = ? " +
-                "ORDER BY p.priority DESC, p.time ASC LIMIT ?";
+                "ORDER BY CASE p.priority " +
+                "WHEN 2 THEN 1 " +
+                "WHEN 1 THEN 2 " +
+                "WHEN 0 THEN 3 " +
+                "ELSE 4 END ASC, " +
+                "CASE WHEN p.time IS NULL OR TRIM(p.time) = '' THEN 1 ELSE 0 END ASC, " +
+                "COALESCE(NULLIF(p.start_time, ''), p.date || ' ' || p.time) ASC, " +
+                "p.task_id ASC LIMIT ?";
         try (SQLiteDatabase db = getReadableDatabase();
              Cursor cursor = db.rawQuery(sql,
                      new String[]{String.valueOf(userId), today, String.valueOf(limit)})) {
@@ -864,9 +1024,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean updateStudyPlanStatus(int planId, int userId, int status) {
         ContentValues values = new ContentValues();
         values.put("status", status);
+        values.put("progress", progressForStatus(status));
         values.put("updated_at", nowString());
         if (status == STATUS_COMPLETED || status == STATUS_CANCELLED) {
             values.put("reminder_enabled", 0);
+        }
+        if (status == STATUS_COMPLETED) {
+            values.put("completed_at", nowString());
+        } else {
+            values.putNull("completed_at");
         }
         try (SQLiteDatabase db = getWritableDatabase()) {
             boolean updated = db.update(TABLE_PLANS, values, "task_id = ? AND user_id = ?",
@@ -883,50 +1049,69 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public StudyStatistics getStudyStatistics(int userId) {
-        int total = 0;
-        int completed = 0;
-        int minutes = 0;
-        int categories = 0;
-        int overdue = 0;
-        int assignments = 0;
-        int classes = 0;
-        int partTime = 0;
-        int personal = 0;
+        int total;
+        int completed;
+        int inProgress;
+        int minutes;
+        int categories;
+        int overdue;
+        int assignments;
+        int classes;
+        int partTime;
+        int personal;
         String nowDateTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
                 .format(new java.util.Date());
         try (SQLiteDatabase db = getReadableDatabase();
-             Cursor planCursor = db.rawQuery(
-                     "SELECT COUNT(*) total, " +
-                             "SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) completed, " +
-                             "COALESCE(SUM(duration_minutes), 0) minutes, " +
-                             "SUM(CASE WHEN status IN (0, 1) AND " +
-                             "COALESCE(NULLIF(deadline, ''), date || ' ' || COALESCE(NULLIF(end_time, ''), time)) < ? " +
-                             "THEN 1 ELSE 0 END) overdue, " +
-                             "SUM(CASE WHEN plan_type = 'ASSIGNMENT' THEN 1 ELSE 0 END) assignment_count, " +
-                             "SUM(CASE WHEN plan_type = 'CLASS' THEN 1 ELSE 0 END) class_count, " +
-                             "SUM(CASE WHEN plan_type = 'PART_TIME' THEN 1 ELSE 0 END) part_time_count, " +
-                             "SUM(CASE WHEN plan_type = 'PERSONAL' THEN 1 ELSE 0 END) personal_count " +
-                             "FROM " + TABLE_PLANS + " WHERE user_id = ?",
-                     new String[]{nowDateTime, String.valueOf(userId)});
              Cursor categoryCursor = db.rawQuery(
                      "SELECT COUNT(*) FROM " + TABLE_CATEGORIES + " WHERE user_id = ?",
                      new String[]{String.valueOf(userId)})) {
-            if (planCursor.moveToFirst()) {
-                total = planCursor.getInt(0);
-                completed = planCursor.getInt(1);
-                minutes = planCursor.getInt(2);
-                overdue = planCursor.getInt(3);
-                assignments = planCursor.getInt(4);
-                classes = planCursor.getInt(5);
-                partTime = planCursor.getInt(6);
-                personal = planCursor.getInt(7);
-            }
+            total = countPlans(db, "user_id = ?", String.valueOf(userId));
+            completed = countPlans(db, "user_id = ? AND status = ?",
+                    String.valueOf(userId), String.valueOf(STATUS_COMPLETED));
+            inProgress = countPlans(db,
+                    "user_id = ? AND status IN (?, ?) " +
+                            "AND COALESCE(NULLIF(start_time, ''), date || ' ' || time) <= ? " +
+                            "AND COALESCE(NULLIF(deadline, ''), date || ' ' || COALESCE(NULLIF(end_time, ''), time)) >= ?",
+                    String.valueOf(userId), String.valueOf(STATUS_UPCOMING),
+                    String.valueOf(STATUS_IN_PROGRESS), nowDateTime, nowDateTime);
+            overdue = countPlans(db,
+                    "user_id = ? AND status IN (?, ?) " +
+                            "AND COALESCE(NULLIF(deadline, ''), date || ' ' || COALESCE(NULLIF(end_time, ''), time)) < ?",
+                    String.valueOf(userId), String.valueOf(STATUS_UPCOMING),
+                    String.valueOf(STATUS_IN_PROGRESS), nowDateTime);
+            minutes = sumPlanMinutes(db, userId);
+            assignments = countPlans(db, "user_id = ? AND plan_type = ?",
+                    String.valueOf(userId), StudyPlan.TYPE_ASSIGNMENT);
+            classes = countPlans(db, "user_id = ? AND plan_type = ?",
+                    String.valueOf(userId), StudyPlan.TYPE_CLASS);
+            partTime = countPlans(db, "user_id = ? AND plan_type = ?",
+                    String.valueOf(userId), StudyPlan.TYPE_PART_TIME);
+            personal = countPlans(db, "user_id = ? AND plan_type = ?",
+                    String.valueOf(userId), StudyPlan.TYPE_PERSONAL);
             if (categoryCursor.moveToFirst()) {
                 categories = categoryCursor.getInt(0);
+            } else {
+                categories = 0;
             }
         }
-        return new StudyStatistics(total, completed, total - completed, categories, minutes,
+        return new StudyStatistics(total, completed, inProgress, categories, minutes,
                 overdue, assignments, classes, partTime, personal);
+    }
+
+    private int countPlans(SQLiteDatabase db, String whereClause, String... args) {
+        try (Cursor cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM " + TABLE_PLANS + " WHERE " + whereClause, args)) {
+            return cursor.moveToFirst() ? cursor.getInt(0) : 0;
+        }
+    }
+
+    private int sumPlanMinutes(SQLiteDatabase db, int userId) {
+        try (Cursor cursor = db.rawQuery(
+                "SELECT COALESCE(SUM(duration_minutes), 0) FROM " + TABLE_PLANS +
+                        " WHERE user_id = ?",
+                new String[]{String.valueOf(userId)})) {
+            return cursor.moveToFirst() ? cursor.getInt(0) : 0;
+        }
     }
 
     private String selectPlanSql() {

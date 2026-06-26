@@ -62,20 +62,20 @@
             android:textSize="12sp" />
 
         <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressPlan"
             android:layout_width="match_parent"
             android:layout_height="7dp"
             android:layout_marginTop="14dp"
-            android:progress="72"
             app:indicatorColor="@color/primary"
             app:trackColor="@color/outline"
             app:trackCornerRadius="4dp"
             app:trackThickness="7dp" />
 
         <TextView
+            android:id="@+id/txtProgressSummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="7dp"
-            android:text="Ti&#7871;n &#273;&#7897; 72% - &#272;ang di&#7877;n ra"
             android:textColor="@color/text_secondary"
             android:textSize="11sp" />
     </LinearLayout>

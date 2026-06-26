@@ -159,6 +159,10 @@ public class PlanDetailMockupActivity extends AppCompatActivity {
         if (currentPlan == null || currentPlan.getStatus() == StudyPlan.STATUS_COMPLETED) {
             return;
         }
+        if (!PlanBusinessRules.canMarkCompleted(currentPlan, System.currentTimeMillis())) {
+            Toast.makeText(this, R.string.error_completion_too_early, Toast.LENGTH_LONG).show();
+            return;
+        }
         boolean wasOverdue = PlanBusinessRules.isOverdue(currentPlan, System.currentTimeMillis());
         if (completePlan()) {
             showCompletionEvaluationDialog(wasOverdue);

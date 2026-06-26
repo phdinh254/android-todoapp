@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:clipToPadding="false"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -193,29 +192,43 @@
                 android:textColor="@color/primary" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/txtEmptyPlans"
-            android:layout_width="match_parent"
-            android:layout_height="90dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_empty_state"
-            android:gravity="center"
-            android:padding="18dp"
-            android:text="H&#244;m nay ch&#432;a c&#243; k&#7871; ho&#7841;ch n&#224;o. Nh&#7845;n + &#273;&#7875; th&#234;m vi&#7879;c m&#7899;i."
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            android:visibility="gone" />
-
-        <include
-            android:id="@+id/rowPlanToday1"
-            layout="@layout/item_home_plan_mockup" />
-
-        <include
-            android:id="@+id/rowPlanToday2"
-            layout="@layout/item_home_plan_mockup" />
-
-        <include
-            android:id="@+id/rowPlanToday3"
-            layout="@layout/item_home_plan_mockup" />
     </LinearLayout>
-</ScrollView>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollTodayPlans"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="ifContentScrolls"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="26dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtEmptyPlans"
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_empty_state"
+                android:gravity="center"
+                android:padding="18dp"
+                android:text="H&#244;m nay ch&#432;a c&#243; k&#7871; ho&#7841;ch c&#7847;n th&#7921;c hi&#7879;n."
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/layoutTodayPlans"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -74,7 +74,7 @@
     <string name="priority_help">Cao: quan tr&#7885;ng, g&#7847;n deadline, &#7843;nh h&#432;&#7903;ng l&#7899;n. Trung b&#236;nh: c&#7847;n l&#224;m nh&#432;ng ch&#432;a qu&#225; g&#7845;p. Th&#7845;p: &#237;t kh&#7849;n c&#7845;p, c&#243; th&#7875; x&#7917; l&#253; sau.</string>
     <string name="duration_minutes">Thời lượng (phút)</string>
     <string name="default_duration">60</string>
-    <string name="enable_reminder">Nh&#7855;c t&#244;i khi &#273;&#7871;n gi&#7901; th&#7921;c hi&#7879;n</string>
+    <string name="enable_reminder">B&#7853;t nh&#7855;c l&#7883;ch</string>
     <string name="manage_courses">Qu&#7843;n l&#253; nh&#243;m k&#7871; ho&#7841;ch</string>
     <string name="uncategorized_course">Chưa phân nhóm</string>
     <string name="course_loading">Danh sách nhóm kế hoạch đang được tải</string>
@@ -87,9 +87,9 @@
     <string name="subject">Môn/lớp hoặc nội dung liên quan</string>
     <string name="wage">Tiền công dự kiến</string>
     <string name="submitted_status">Đã nộp bài</string>
-    <string name="repeat_rule">Lặp lại</string>
+    <string name="repeat_rule">Nh&#7855;c l&#7841;i th&#244;ng b&#225;o</string>
     <string name="repeat_until">Lặp lại đến ngày (yyyy-MM-dd)</string>
-    <string name="reminder_lead">Ki&#7875;u nh&#7855;c l&#7883;ch</string>
+    <string name="reminder_lead">Nh&#7855;c l&#7883;ch</string>
     <string name="schedule_conflict_warning">Th&#7901;i gian n&#224;y &#273;ang tr&#249;ng v&#7899;i k&#7871; ho&#7841;ch kh&#225;c.</string>
     <string name="repeat_save_summary">Đã tạo %1$d/%2$d kế hoạch. Bỏ qua %3$d ngày bị trùng giờ.</string>
     <string name="save_study_plan">Lưu kế hoạch</string>
@@ -98,6 +98,7 @@
     <string name="delete_study_plan">Xóa kế hoạch</string>
     <string name="completed_status">&#272;&#227; ho&#224;n th&#224;nh</string>
     <string name="mark_completed">&#272;&#225;nh d&#7845;u ho&#224;n th&#224;nh</string>
+    <string name="error_completion_too_early">C&#244;ng vi&#7879;c ch&#432;a &#273;&#7911; th&#7901;i gian &#273;&#7875; &#273;&#225;nh d&#7845;u ho&#224;n th&#224;nh.</string>
     <string name="save">L&#432;u</string>
     <string name="add_sub_task">+ Th&#234;m c&#244;ng vi&#7879;c nh&#7887;</string>
     <string name="sub_task_title_hint">Nh&#7853;p t&#234;n c&#244;ng vi&#7879;c nh&#7887;</string>
@@ -216,39 +217,27 @@
     </string-array>
     <string-array name="repeat_rule_values">
         <item>NONE</item>
-        <item>DAILY</item>
-        <item>WEEKLY</item>
-        <item>MONTHLY</item>
-        <item>MON_WED_FRI</item>
-        <item>TUE_THU</item>
-        <item>WEEKEND</item>
     </string-array>
     <string-array name="repeat_rule_names">
-        <item>Kh&#244;ng l&#7863;p l&#7841;i</item>
-        <item>H&#7857;ng ng&#224;y</item>
-        <item>H&#7857;ng tu&#7847;n</item>
-        <item>H&#7857;ng th&#225;ng</item>
-        <item>Th&#7913; 2 - 4 - 6</item>
-        <item>Th&#7913; 3 - 5</item>
-        <item>Cu&#7889;i tu&#7847;n</item>
+        <item>Kh&#244;ng nh&#7855;c l&#7841;i th&#244;ng b&#225;o</item>
     </string-array>
     <string-array name="reminder_lead_values">
+        <item>-9999</item>
         <item>0</item>
-        <item>1</item>
-        <item>3</item>
-        <item>5</item>
-        <item>10</item>
-        <item>30</item>
-        <item>-1440</item>
+        <item>-1</item>
+        <item>-5</item>
+        <item>-10</item>
+        <item>-20</item>
+        <item>-30</item>
     </string-array>
     <string-array name="reminder_lead_names">
-        <item>Nh&#7855;c &#273;&#250;ng gi&#7901;</item>
-        <item>Sau 1 ph&#250;t</item>
-        <item>Sau 3 ph&#250;t</item>
-        <item>Sau 5 ph&#250;t</item>
-        <item>Sau 10 ph&#250;t</item>
-        <item>Sau 30 ph&#250;t</item>
-        <item>M&#7895;i 24 gi&#7901;</item>
+        <item>Kh&#244;ng nh&#7855;c</item>
+        <item>&#272;&#250;ng gi&#7901;</item>
+        <item>Tr&#432;&#7899;c 1 ph&#250;t</item>
+        <item>Tr&#432;&#7899;c 5 ph&#250;t</item>
+        <item>Tr&#432;&#7899;c 10 ph&#250;t</item>
+        <item>Tr&#432;&#7899;c 20 ph&#250;t</item>
+        <item>Tr&#432;&#7899;c 30 ph&#250;t</item>
     </string-array>
     <string-array name="category_color_names">
         <item>Xanh ngọc</item>

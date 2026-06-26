@@ -9,9 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CalendarView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,6 +23,8 @@ import com.example.personalplanner.activity.PlanDetailMockupActivity;
 import com.example.personalplanner.adapter.TaskAdapter;
 import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.data.model.StudyPlan;
+import com.example.personalplanner.notification.ReminderScheduler;
+import com.example.personalplanner.utils.PlanBusinessRules;
 import com.example.personalplanner.utils.SessionManager;
 import com.google.android.material.chip.ChipGroup;
 
@@ -63,23 +67,13 @@ public class CalendarFragment extends Fragment {
         adapter = new TaskAdapter(new TaskAdapter.OnTaskActionListener() {
             public void onTaskClick(StudyPlan plan) { openDetail(plan); }
             public void onStatusChanged(StudyPlan plan, boolean checked) {
-                executorService.execute(() -> {
-                    databaseHelper.updateStudyPlanStatus(plan.getPlanId(),
-                            sessionManager.getUserId(),
-                            checked ? StudyPlan.STATUS_COMPLETED : StudyPlan.STATUS_UPCOMING);
-                    mainHandler.post(CalendarFragment.this::loadDate);
-                });
+                updatePlanStatus(plan, checked);
             }
         });
         upcomingAdapter = new TaskAdapter(new TaskAdapter.OnTaskActionListener() {
             public void onTaskClick(StudyPlan plan) { openDetail(plan); }
             public void onStatusChanged(StudyPlan plan, boolean checked) {
-                executorService.execute(() -> {
-                    databaseHelper.updateStudyPlanStatus(plan.getPlanId(),
-                            sessionManager.getUserId(),
-                            checked ? StudyPlan.STATUS_COMPLETED : StudyPlan.STATUS_UPCOMING);
-                    mainHandler.post(CalendarFragment.this::loadDate);
-                });
+                updatePlanStatus(plan, checked);
             }
         });
         recyclerCalendarTasks.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -151,6 +145,27 @@ public class CalendarFragment extends Fragment {
             end.set(Calendar.DAY_OF_MONTH, end.getActualMaximum(Calendar.DAY_OF_MONTH));
         }
         return new DateRange(dateFormat.format(start.getTime()), dateFormat.format(end.getTime()));
+    }
+
+    private void updatePlanStatus(StudyPlan plan, boolean checked) {
+        if (checked && !PlanBusinessRules.canMarkCompleted(plan, System.currentTimeMillis())) {
+            Toast.makeText(requireContext(), R.string.error_completion_too_early,
+                    Toast.LENGTH_LONG).show();
+            loadDate();
+            return;
+        }
+        executorService.execute(() -> {
+            boolean updated = databaseHelper.updateStudyPlanStatus(plan.getPlanId(),
+                    sessionManager.getUserId(),
+                    checked ? StudyPlan.STATUS_COMPLETED : StudyPlan.STATUS_UPCOMING);
+            mainHandler.post(() -> {
+                if (updated && checked && isAdded()) {
+                    ReminderScheduler.cancel(requireContext(), plan.getPlanId());
+                    NotificationManagerCompat.from(requireContext()).cancel(plan.getPlanId());
+                }
+                loadDate();
+            });
+        });
     }
 
     private static class DateRange {

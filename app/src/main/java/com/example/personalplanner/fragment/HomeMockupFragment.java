@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,7 +18,10 @@ import com.example.personalplanner.activity.PlanDetailMockupActivity;
 import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.data.model.StudyStatistics;
+import com.example.personalplanner.data.model.SubTask;
+import com.example.personalplanner.utils.PlanBusinessRules;
 import com.example.personalplanner.utils.SessionManager;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,7 +40,7 @@ public class HomeMockupFragment extends Fragment {
     private TextView txtCompleted;
     private TextView txtOverdue;
     private TextView txtEmptyPlans;
-    private View[] planRows;
+    private LinearLayout layoutTodayPlans;
 
     @Nullable
     @Override
@@ -67,11 +71,7 @@ public class HomeMockupFragment extends Fragment {
         txtCompleted = view.findViewById(R.id.txtCompleted);
         txtOverdue = view.findViewById(R.id.txtOverdue);
         txtEmptyPlans = view.findViewById(R.id.txtEmptyPlans);
-        planRows = new View[]{
-                view.findViewById(R.id.rowPlanToday1),
-                view.findViewById(R.id.rowPlanToday2),
-                view.findViewById(R.id.rowPlanToday3)
-        };
+        layoutTodayPlans = view.findViewById(R.id.layoutTodayPlans);
     }
 
     private void setupActions(View view) {
@@ -89,40 +89,50 @@ public class HomeMockupFragment extends Fragment {
             username = "An Nguy\u1ec5n";
         }
         txtUserName.setText("Xin ch\u00e0o " + username + "!");
+        txtGreetingSummary.setText("H\u00e3y l\u00ean k\u1ebf ho\u1ea1ch cho m\u00ecnh ngay");
 
-        String today = dateFormat.format(Calendar.getInstance().getTime());
+        loadHomeStatistics(userId);
+        loadTodayPlans(userId);
+    }
+
+    private void loadHomeStatistics(int userId) {
         StudyStatistics statistics = databaseHelper.getStudyStatistics(userId);
-        ArrayList<StudyPlan> plans = databaseHelper.getTodaySuggestions(userId, today, 3);
-        if (plans.isEmpty()) {
-            plans = databaseHelper.getUpcomingPlans(userId, today, 3);
-        }
-
         txtTotalPlans.setText(String.valueOf(statistics.getTotalPlans()));
         txtInProgress.setText(String.valueOf(statistics.getPendingPlans()));
         txtCompleted.setText(String.valueOf(statistics.getCompletedPlans()));
         txtOverdue.setText(String.valueOf(statistics.getOverduePlans()));
-        txtGreetingSummary.setText("H\u00e3y l\u00ean k\u1ebf ho\u1ea1ch cho m\u00ecnh ngay");
+    }
+
+    private void loadTodayPlans(int userId) {
+        String today = dateFormat.format(Calendar.getInstance().getTime());
+        ArrayList<StudyPlan> plans = databaseHelper.getTodaySuggestions(userId, today, 7);
         bindPlanRows(plans);
     }
 
     private void bindPlanRows(ArrayList<StudyPlan> plans) {
+        layoutTodayPlans.removeAllViews();
         txtEmptyPlans.setVisibility(plans.isEmpty() ? View.VISIBLE : View.GONE);
-        for (int i = 0; i < planRows.length; i++) {
-            View row = planRows[i];
-            if (i >= plans.size()) {
-                row.setVisibility(View.GONE);
-                continue;
-            }
-            StudyPlan plan = plans.get(i);
-            row.setVisibility(View.VISIBLE);
+        layoutTodayPlans.setVisibility(plans.isEmpty() ? View.GONE : View.VISIBLE);
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        for (StudyPlan plan : plans) {
+            View row = inflater.inflate(R.layout.item_home_plan_mockup, layoutTodayPlans, false);
             TextView title = row.findViewById(R.id.txtPlanTitle);
             TextView meta = row.findViewById(R.id.txtPlanMeta);
             TextView chip = row.findViewById(R.id.txtPlanType);
+            TextView progressText = row.findViewById(R.id.txtProgressSummary);
+            LinearProgressIndicator progressPlan = row.findViewById(R.id.progressPlan);
+            ArrayList<SubTask> subTasks = databaseHelper.getSubTasks(plan.getPlanId());
+            int progress = PlanBusinessRules.calculateProgress(plan, subTasks);
+            String status = PlanBusinessRules.getDisplayStatusLabel(
+                    PlanBusinessRules.getDisplayStatus(plan, System.currentTimeMillis()));
             title.setText(plan.getTitle());
             meta.setText(buildMeta(plan));
             chip.setText(labelForPriority(plan.getPriority()));
             stylePriorityChip(chip, plan.getPriority());
+            progressPlan.setProgressCompat(progress, false);
+            progressText.setText("Ti\u1ebfn \u0111\u1ed9 " + progress + "% - " + status);
             row.setOnClickListener(v -> openPlanDetail(plan));
+            layoutTodayPlans.addView(row);
         }
     }
 

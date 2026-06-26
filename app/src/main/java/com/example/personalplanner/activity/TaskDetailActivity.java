@@ -27,6 +27,7 @@ import com.example.personalplanner.data.model.RepeatRule;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.notification.ReminderScheduler;
 import com.example.personalplanner.notification.ReminderType;
+import com.example.personalplanner.utils.PlanBusinessRules;
 import com.example.personalplanner.utils.SessionManager;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
@@ -166,7 +167,8 @@ public class TaskDetailActivity extends AppCompatActivity {
         selectedCategoryId = getIntent().getIntExtra("category_id", 0);
         selectedType = valueOrDefault(getIntent().getStringExtra("plan_type"), StudyPlan.TYPE_PERSONAL);
         selectedRepeatRule = valueOrDefault(getIntent().getStringExtra("repeat_rule"), "NONE");
-        selectedReminderMinutes = getIntent().getIntExtra("reminder_minutes", 0);
+        selectedReminderMinutes = ReminderType.fromStoredValue(
+                getIntent().getIntExtra("reminder_minutes", 0)).getStoredValue();
         spinnerPriority.setSelection(getIntent().getIntExtra("priority", 1));
         spinnerStatus.setSelection(getIntent().getIntExtra("status", 0));
         setSelectionByValue(spinnerPlanType, R.array.plan_type_values, selectedType);
@@ -259,9 +261,16 @@ public class TaskDetailActivity extends AppCompatActivity {
         }
         PlanCategory category = categories.get(spinnerCategory.getSelectedItemPosition());
         int status = spinnerStatus.getSelectedItemPosition();
+        StudyPlan persistedPlan = databaseHelper.getStudyPlanById(planId);
+        if (status == StudyPlan.STATUS_COMPLETED
+                && !PlanBusinessRules.canMarkCompleted(persistedPlan, System.currentTimeMillis())) {
+            Toast.makeText(this, R.string.error_completion_too_early, Toast.LENGTH_LONG).show();
+            return;
+        }
         int reminderMinutes = Integer.parseInt(valueFromArray(
                 R.array.reminder_lead_values, spinnerReminderLead.getSelectedItemPosition()));
         boolean reminderActive = switchReminder.isChecked()
+                && ReminderType.fromStoredValue(reminderMinutes) != ReminderType.NONE
                 && status != DatabaseHelper.STATUS_COMPLETED
                 && status != DatabaseHelper.STATUS_CANCELLED;
         if (reminderActive) {
@@ -470,6 +479,9 @@ public class TaskDetailActivity extends AppCompatActivity {
             return false;
         }
         ReminderType reminderType = ReminderType.fromStoredValue(reminderValue);
+        if (reminderType == ReminderType.NONE) {
+            return true;
+        }
         try {
             long selectedDateMillis = ReminderScheduler.parseSelectedDateMillis(selectedDate);
             Integer selectedTimeMinutes = null;

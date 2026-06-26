@@ -33,6 +33,10 @@ public final class ReminderScheduler {
                                    String date, String time, int reminderValue) {
         try {
             ReminderType type = ReminderType.fromStoredValue(reminderValue);
+            if (type == ReminderType.NONE) {
+                cancel(context, planId);
+                return false;
+            }
             long triggerAt = resolveTriggerTimeMillis(date, time, reminderValue);
             return scheduleExactAt(context, planId, title, categoryName, triggerAt, type);
         } catch (IllegalArgumentException ignored) {
@@ -49,6 +53,9 @@ public final class ReminderScheduler {
 
     public static long resolveTriggerTimeMillis(String date, String time, int reminderValue) {
         ReminderType type = ReminderType.fromStoredValue(reminderValue);
+        if (type == ReminderType.NONE) {
+            throw new IllegalArgumentException("Reminder disabled");
+        }
         long selectedDateMillis = parseSelectedDateMillis(date);
         Integer selectedTimeMinutes = type.isAllDay() ? null : parseSelectedTimeMinutes(time);
         long triggerAt = calculateReminderTimeMillis(
@@ -102,6 +109,9 @@ public final class ReminderScheduler {
                                                    ReminderType type) {
         if (type == ReminderType.EVERY_24_HOURS) {
             return selectedDateMillis + DAY_MILLIS;
+        }
+        if (type == ReminderType.NONE) {
+            throw new IllegalArgumentException("Reminder disabled");
         }
         if (selectedTimeMinutes == null) {
             throw new IllegalArgumentException("Manual reminder requires selected time");

@@ -30,6 +30,7 @@ import com.example.personalplanner.data.local.DatabaseHelper;
 import com.example.personalplanner.data.model.PlanCategory;
 import com.example.personalplanner.data.model.StudyPlan;
 import com.example.personalplanner.notification.ReminderScheduler;
+import com.example.personalplanner.utils.PlanBusinessRules;
 import com.example.personalplanner.utils.SessionManager;
 import com.google.android.material.chip.ChipGroup;
 
@@ -189,6 +190,12 @@ public class TaskFragment extends Fragment {
     }
 
     private void updatePlanStatus(StudyPlan plan, boolean checked) {
+        if (checked && !PlanBusinessRules.canMarkCompleted(plan, System.currentTimeMillis())) {
+            Toast.makeText(requireContext(), R.string.error_completion_too_early,
+                    Toast.LENGTH_LONG).show();
+            loadPlans();
+            return;
+        }
         int oldStatus = plan.getStatus();
         int newStatus = checked ? StudyPlan.STATUS_COMPLETED : StudyPlan.STATUS_UPCOMING;
         plan.setStatus(newStatus);

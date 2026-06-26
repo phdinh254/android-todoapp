@@ -18,6 +18,7 @@ public final class PlanBusinessRules {
             new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
     private static final SimpleDateFormat DATE_FORMAT =
             new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    private static final long MINUTE_MILLIS = 60_000L;
 
     private PlanBusinessRules() {
     }
@@ -36,6 +37,9 @@ public final class PlanBusinessRules {
             return DISPLAY_OVERDUE;
         }
         if (plan.getStatus() == StudyPlan.STATUS_IN_PROGRESS) {
+            return DISPLAY_IN_PROGRESS;
+        }
+        if (isCurrentTimeInsidePlan(plan, nowMillis)) {
             return DISPLAY_IN_PROGRESS;
         }
         return DISPLAY_NOT_STARTED;
@@ -103,6 +107,26 @@ public final class PlanBusinessRules {
         return deadlineMillis > 0 && deadlineMillis < nowMillis;
     }
 
+    public static boolean canMarkCompleted(StudyPlan plan, long nowMillis) {
+        if (plan == null || plan.getStatus() == StudyPlan.STATUS_CANCELLED) {
+            return false;
+        }
+        if (plan.getStatus() == StudyPlan.STATUS_COMPLETED) {
+            return true;
+        }
+        long eligibleAt = getCompletionEligibleAtMillis(plan);
+        return eligibleAt > 0 && nowMillis >= eligibleAt;
+    }
+
+    public static long getCompletionEligibleAtMillis(StudyPlan plan) {
+        long startMillis = parseStartMillis(plan);
+        long endMillis = parseEndMillis(plan, startMillis);
+        if (startMillis <= 0 || endMillis <= startMillis) {
+            return -1;
+        }
+        return startMillis + ((endMillis - startMillis) / 2L);
+    }
+
     public static int calculateProgress(StudyPlan plan, List<SubTask> subTasks) {
         if (plan == null) {
             return 0;
@@ -141,6 +165,49 @@ public final class PlanBusinessRules {
             } catch (Exception ignoredAgain) {
                 return -1;
             }
+        }
+    }
+
+    private static boolean isCurrentTimeInsidePlan(StudyPlan plan, long nowMillis) {
+        long startMillis = parseStartMillis(plan);
+        long endMillis = parseEndMillis(plan, startMillis);
+        return startMillis > 0 && endMillis > startMillis
+                && nowMillis >= startMillis && nowMillis <= endMillis;
+    }
+
+    private static long parseStartMillis(StudyPlan plan) {
+        if (plan == null || plan.getDate() == null || plan.getDate().trim().isEmpty()) {
+            return -1;
+        }
+        return parseDateTimeMillis(plan.getDate(), normalizeTime(plan.getTime()));
+    }
+
+    private static long parseEndMillis(StudyPlan plan, long startMillis) {
+        if (plan == null || startMillis <= 0) {
+            return -1;
+        }
+        String endTime = plan.getEndTime();
+        if (endTime == null || endTime.trim().isEmpty()
+                || normalizeTime(endTime).equals(normalizeTime(plan.getTime()))) {
+            int duration = plan.getDurationMinutes();
+            return duration > 0 ? startMillis + duration * MINUTE_MILLIS : -1;
+        }
+        long endMillis = parseDateTimeMillis(plan.getDate(), normalizeTime(endTime));
+        if (endMillis <= startMillis) {
+            int duration = plan.getDurationMinutes();
+            return duration > 0 ? startMillis + duration * MINUTE_MILLIS
+                    : endMillis + 24L * 60L * MINUTE_MILLIS;
+        }
+        return endMillis;
+    }
+
+    private static long parseDateTimeMillis(String date, String time) {
+        try {
+            synchronized (DATE_TIME_FORMAT) {
+                return DATE_TIME_FORMAT.parse(date.trim() + " " + normalizeTime(time)).getTime();
+            }
+        } catch (Exception ignored) {
+            return -1;
         }
     }
 

@@ -214,19 +214,22 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="@string/repeat_rule"
-            android:textAppearance="@style/TextAppearance.PersonalPlanner.Body" />
+            android:textAppearance="@style/TextAppearance.PersonalPlanner.Body"
+            android:visibility="gone" />
         <Spinner
             android:id="@+id/spinnerRepeatRule"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:background="@drawable/bg_soft_field"
-            android:paddingHorizontal="12dp" />
+            android:paddingHorizontal="12dp"
+            android:visibility="gone" />
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.PersonalPlanner.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:hint="@string/repeat_until">
+            android:hint="@string/repeat_until"
+            android:visibility="gone">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edtRepeatUntil"
                 android:layout_width="match_parent"
